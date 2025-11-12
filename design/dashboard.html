@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAIT - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-gradient">⬤⬤⬤</span>
+                    <span class="logo-text">CAIT</span>
+                </div>
+                <h1 class="page-title">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="icon-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <div class="user-profile">
+                    <div class="avatar">JD</div>
+                    <span>John Doe</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-wrapper">
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item active">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#connections" class="nav-item">
+                        <i class="fas fa-link"></i>
+                        <span>Connections</span>
+                    </a>
+                    <a href="#tasks" class="nav-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="#analytics" class="nav-item">
+                        <i class="fas fa-bar-chart"></i>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="#settings" class="nav-item">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="#help" class="nav-item">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Help</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- MAIN CONTENT -->
+            <main class="main-content">
+                <!-- DASHBOARD VIEW -->
+                <section id="dashboard" class="dashboard-view active">
+                    <div class="dashboard-grid">
+                        <!-- SEO Health Card -->
+                        <div class="card card-elevated">
+                            <div class="card-header">
+                                <h3><i class="fas fa-heartbeat"></i> SEO Health</h3>
+                                <span class="status-badge status-good">Healthy</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric-display">
+                                    <div class="metric-large">85%</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 85%; background: linear-gradient(90deg, #22c55e, #eab308);"></div>
+                                    </div>
+                                    <p class="metric-label">Overall SEO Score</p>
+                                </div>
+                                <div class="sub-metrics">
+                                    <div class="sub-metric">
+                                        <i class="fas fa-check-circle status-green"></i>
+                                        <span>On-Page: 90%</span>
+                                    </div>
+                                    <div class="sub-metric">
+                                        <i class="fas fa-exclamation-circle status-yellow"></i>
+                                        <span>Technical: 75%</span>
+                                    </div>
+                                    <div class="sub-metric">
+                                        <i class="fas fa-times-circle status-red"></i>
+                                        <span>Backlinks: 60%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Connections Card -->
+                        <div class="card card-elevated">
+                            <div class="card-header">
+                                <h3><i class="fas fa-plug"></i> Connections</h3>
+                                <a href="#connections" class="link-btn">Manage →</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="connections-list">
+                                    <div class="connection-item">
+                                        <span class="status-dot status-green"></span>
+                                        <span class="connection-name">Google Search Console</span>
+                                    </div>
+                                    <div class="connection-item">
+                                        <span class="status-dot status-green"></span>
+                                        <span class="connection-name">OpenAI API</span>
+                                    </div>
+                                    <div class="connection-item">
+                                        <span class="status-dot status-yellow"></span>
+                                        <span class="connection-name">Bing Webmaster</span>
+                                    </div>
+                                    <div class="connection-item">
+                                        <span class="status-dot status-red"></span>
+                                        <span class="connection-name">Perplexity</span>
+                                    </div>
+                                </div>
+                                <div class="connection-summary">
+                                    <strong>4 of 6</strong> platforms connected
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Tasks Card -->
+                        <div class="card card-elevated">
+                            <div class="card-header">
+                                <h3><i class="fas fa-tasks"></i> Active Tasks</h3>
+                                <a href="#tasks" class="link-btn">View All →</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="task-stats">
+                                    <div class="stat">
+                                        <span class="stat-number">12</span>
+                                        <span class="stat-label">To Do</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-number">5</span>
+                                        <span class="stat-label">In Progress</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-number">8</span>
+                                        <span class="stat-label">Completed</span>
+                                    </div>
+                                </div>
+                                <div class="quick-tasks">
+                                    <div class="task-item">
+                                        <i class="fas fa-file-alt"></i> Write blog post
+                                    </div>
+                                    <div class="task-item">
+                                        <i class="fas fa-search"></i> Update meta descriptions
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Metrics Card -->
+                        <div class="card card-elevated">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-line"></i> Key Metrics</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="metrics-grid">
+                                    <div class="metric">
+                                        <div class="metric-value">
+                                            <span>↑ 23%</span>
+                                            <span class="status-green">Traffic</span>
+                                        </div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">
+                                            <span>↑ 8</span>
+                                            <span class="status-green">Rankings</span>
+                                        </div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">
+                                            <span>↓ 12%</span>
+                                            <span class="status-yellow">Bounce Rate</span>
+                                        </div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">
+                                            <span>2.45m</span>
+                                            <span class="status-neutral">Avg Time</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommended Actions Card (full width) -->
+                        <div class="card card-elevated card-full-width">
+                            <div class="card-header">
+                                <h3><i class="fas fa-rocket"></i> Recommended Actions</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="actions-list">
+                                    <div class="action-item">
+                                        <div class="action-content">
+                                            <i class="fas fa-pencil-alt"></i>
+                                            <div class="action-text">
+                                                <strong>Write meta descriptions</strong>
+                                                <span>5 pages need descriptions</span>
+                                            </div>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-primary btn-sm">
+                                                <i class="fas fa-wand-magic-sparkles"></i> Generate with AI
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm">Schedule</button>
+                                        </div>
+                                    </div>
+                                    <div class="action-item">
+                                        <div class="action-content">
+                                            <i class="fas fa-link-slash"></i>
+                                            <div class="action-text">
+                                                <strong>Fix broken links</strong>
+                                                <span>3 broken links found</span>
+                                            </div>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-primary btn-sm">
+                                                <i class="fas fa-wand-magic-sparkles"></i> Auto-fix
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm">Review</button>
+                                        </div>
+                                    </div>
+                                    <div class="action-item">
+                                        <div class="action-content">
+                                            <i class="fas fa-images"></i>
+                                            <div class="action-text">
+                                                <strong>Optimize images</strong>
+                                                <span>8 images can be optimized</span>
+                                            </div>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-primary btn-sm">
+                                                <i class="fas fa-wand-magic-sparkles"></i> Generate with AI
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm">Schedule</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CONNECTIONS VIEW -->
+                <section id="connections" class="connections-view">
+                    <div class="view-header">
+                        <h2>Connections</h2>
+                        <p>Manage your connected tools and platforms</p>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus"></i> Add New Connection
+                    </button>
+
+                    <div class="connections-grid">
+                        <!-- Google -->
+                        <div class="connection-card connected">
+                            <div class="connection-status">
+                                <span class="status-dot status-green"></span>
+                                <span class="status-text">Connected</span>
+                            </div>
+                            <div class="connection-icon">
+                                <i class="fab fa-google"></i>
+                            </div>
+                            <h3>Google Search Console</h3>
+                            <p>Track your site's presence in Google Search</p>
+                            <div class="connection-actions">
+                                <button class="btn btn-secondary btn-sm">Settings</button>
+                                <button class="btn btn-danger btn-sm">Disconnect</button>
+                            </div>
+                        </div>
+
+                        <!-- OpenAI -->
+                        <div class="connection-card connected">
+                            <div class="connection-status">
+                                <span class="status-dot status-green"></span>
+                                <span class="status-text">Connected</span>
+                            </div>
+                            <div class="connection-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <h3>OpenAI API</h3>
+                            <p>Power your AI-driven content generation</p>
+                            <div class="connection-actions">
+                                <button class="btn btn-secondary btn-sm">Settings</button>
+                                <button class="btn btn-danger btn-sm">Disconnect</button>
+                            </div>
+                        </div>
+
+                        <!-- Bing -->
+                        <div class="connection-card pending">
+                            <div class="connection-status">
+                                <span class="status-dot status-yellow"></span>
+                                <span class="status-text">Pending Auth</span>
+                            </div>
+                            <div class="connection-icon">
+                                <i class="fab fa-windows"></i>
+                            </div>
+                            <h3>Bing Webmaster Tools</h3>
+                            <p>Monitor your site in Bing Search</p>
+                            <div class="connection-actions">
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-sign-in-alt"></i> Connect Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Perplexity -->
+                        <div class="connection-card pending">
+                            <div class="connection-status">
+                                <span class="status-dot status-yellow"></span>
+                                <span class="status-text">Setup Required</span>
+                            </div>
+                            <div class="connection-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <h3>Perplexity API</h3>
+                            <p>Research and content insights</p>
+                            <div class="connection-actions">
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-book"></i> Instructions
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Ahrefs -->
+                        <div class="connection-card disconnected">
+                            <div class="connection-status">
+                                <span class="status-dot status-red"></span>
+                                <span class="status-text">Disconnected</span>
+                            </div>
+                            <div class="connection-icon">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <h3>Ahrefs</h3>
+                            <p>Comprehensive SEO and competitor analysis</p>
+                            <div class="connection-actions">
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-sign-in-alt"></i> Connect
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Add More -->
+                        <div class="connection-card add-more">
+                            <div class="connection-icon">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <h3>Add More Platforms</h3>
+                            <p>Connect other tools and services</p>
+                            <button class="btn btn-primary btn-sm">Browse All</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TASKS VIEW -->
+                <section id="tasks" class="tasks-view">
+                    <div class="view-header">
+                        <h2>Tasks</h2>
+                        <p>Manage your SEO action items</p>
+                    </div>
+
+                    <div class="tasks-controls">
+                        <div class="filter-group">
+                            <button class="filter-btn active">All</button>
+                            <button class="filter-btn">On-Page</button>
+                            <button class="filter-btn">Off-Page</button>
+                            <button class="filter-btn">Technical SEO</button>
+                        </div>
+                        <div class="view-toggle">
+                            <button class="view-btn active" data-view="list">
+                                <i class="fas fa-list"></i> List
+                            </button>
+                            <button class="view-btn" data-view="kanban">
+                                <i class="fas fa-columns"></i> Kanban
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- LIST VIEW -->
+                    <div class="tasks-list">
+                        <!-- Completed Tasks -->
+                        <div class="task-section">
+                            <h3 class="task-section-title">
+                                <i class="fas fa-check-circle status-green"></i> Completed (8)
+                            </h3>
+                            <div class="task-items">
+                                <div class="task-item completed">
+                                    <input type="checkbox" checked disabled>
+                                    <div class="task-content">
+                                        <strong>Fix title tags</strong>
+                                        <span class="task-meta">5 pages updated</span>
+                                    </div>
+                                    <span class="task-date">Completed 2 days ago</span>
+                                </div>
+                                <div class="task-item completed">
+                                    <input type="checkbox" checked disabled>
+                                    <div class="task-content">
+                                        <strong>Optimize images</strong>
+                                        <span class="task-meta">12 images compressed</span>
+                                    </div>
+                                    <span class="task-date">Completed 5 days ago</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- In Progress Tasks -->
+                        <div class="task-section">
+                            <h3 class="task-section-title">
+                                <i class="fas fa-spinner status-yellow"></i> In Progress (5)
+                            </h3>
+                            <div class="task-items">
+                                <div class="task-item in-progress">
+                                    <input type="checkbox">
+                                    <div class="task-content">
+                                        <strong>Build backlinks</strong>
+                                        <span class="task-meta">3 URLs in queue, 60% complete</span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-secondary btn-xs">Pause</button>
+                                    </div>
+                                </div>
+                                <div class="task-item in-progress">
+                                    <input type="checkbox">
+                                    <div class="task-content">
+                                        <strong>Internal linking strategy</strong>
+                                        <span class="task-meta">Setup and planning</span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-secondary btn-xs">View</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- To Do Tasks -->
+                        <div class="task-section">
+                            <h3 class="task-section-title">
+                                <i class="fas fa-circle-notch status-red"></i> To Do (12)
+                            </h3>
+                            <div class="task-items">
+                                <div class="task-item todo">
+                                    <input type="checkbox">
+                                    <div class="task-content">
+                                        <strong>Write blog post</strong>
+                                        <span class="task-meta">About "SEO best practices"</span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-primary btn-xs" data-action="generate">
+                                            <i class="fas fa-wand-magic-sparkles"></i> Generate
+                                        </button>
+                                        <button class="btn btn-secondary btn-xs">Schedule</button>
+                                    </div>
+                                </div>
+                                <div class="task-item todo">
+                                    <input type="checkbox">
+                                    <div class="task-content">
+                                        <strong>Update meta descriptions</strong>
+                                        <span class="task-meta">10 pages need descriptions</span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-primary btn-xs" data-action="generate">
+                                            <i class="fas fa-wand-magic-sparkles"></i> Generate
+                                        </button>
+                                        <button class="btn btn-secondary btn-xs">Review</button>
+                                    </div>
+                                </div>
+                                <div class="task-item todo">
+                                    <input type="checkbox">
+                                    <div class="task-content">
+                                        <strong>Fix broken links</strong>
+                                        <span class="task-meta">3 broken links found</span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-primary btn-xs" data-action="generate">
+                                            <i class="fas fa-wand-magic-sparkles"></i> Auto-fix
+                                        </button>
+                                        <button class="btn btn-secondary btn-xs">View</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KANBAN VIEW (Hidden by default) -->
+                    <div class="tasks-kanban hidden">
+                        <div class="kanban-board">
+                            <div class="kanban-column">
+                                <div class="kanban-header">
+                                    <h3>To Do</h3>
+                                    <span class="kanban-count">12</span>
+                                </div>
+                                <div class="kanban-cards">
+                                    <div class="kanban-card">
+                                        <div class="kanban-card-priority">
+                                            <span class="priority-badge high">High</span>
+                                        </div>
+                                        <h4>Write blog post</h4>
+                                        <p>About "SEO best practices"</p>
+                                        <button class="btn btn-primary btn-sm">
+                                            <i class="fas fa-wand-magic-sparkles"></i> Generate
+                                        </button>
+                                    </div>
+                                    <div class="kanban-card">
+                                        <div class="kanban-card-priority">
+                                            <span class="priority-badge medium">Medium</span>
+                                        </div>
+                                        <h4>Update meta descriptions</h4>
+                                        <p>10 pages need descriptions</p>
+                                        <button class="btn btn-primary btn-sm">
+                                            <i class="fas fa-wand-magic-sparkles"></i> Generate
+                                        </button>
+                                    </div>
+                                    <div class="kanban-card">
+                                        <div class="kanban-card-priority">
+                                            <span class="priority-badge high">High</span>
+                                        </div>
+                                        <h4>Fix broken links</h4>
+                                        <p>3 broken links found</p>
+                                        <button class="btn btn-primary btn-sm">
+                                            <i class="fas fa-wand-magic-sparkles"></i> Auto-fix
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="kanban-column">
+                                <div class="kanban-header">
+                                    <h3>In Progress</h3>
+                                    <span class="kanban-count">5</span>
+                                </div>
+                                <div class="kanban-cards">
+                                    <div class="kanban-card">
+                                        <div class="kanban-card-priority">
+                                            <span class="priority-badge high">High</span>
+                                        </div>
+                                        <h4>Build backlinks</h4>
+                                        <p>3 URLs in queue</p>
+                                        <div class="progress-bar small">
+                                            <div class="progress-fill" style="width: 60%;"></div>
+                                        </div>
+                                        <span class="progress-text">60% complete</span>
+                                    </div>
+                                    <div class="kanban-card">
+                                        <div class="kanban-card-priority">
+                                            <span class="priority-badge medium">Medium</span>
+                                        </div>
+                                        <h4>Internal linking strategy</h4>
+                                        <p>Setup and planning</p>
+                                        <div class="progress-bar small">
+                                            <div class="progress-fill" style="width: 30%;"></div>
+                                        </div>
+                                        <span class="progress-text">30% complete</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="kanban-column">
+                                <div class="kanban-header">
+                                    <h3>Completed</h3>
+                                    <span class="kanban-count">8</span>
+                                </div>
+                                <div class="kanban-cards">
+                                    <div class="kanban-card completed-card">
+                                        <h4><i class="fas fa-check"></i> Fix title tags</h4>
+                                        <p>5 pages updated</p>
+                                        <span class="date-label">2 days ago</span>
+                                    </div>
+                                    <div class="kanban-card completed-card">
+                                        <h4><i class="fas fa-check"></i> Optimize images</h4>
+                                        <p>12 images compressed</p>
+                                        <span class="date-label">5 days ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for AI Generation -->
+    <div id="aiModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Generate with AI</h2>
+            <p id="modalTaskName"></p>
+            <div class="modal-preview">
+                <div class="spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Generating your content...</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary">Use This</button>
+                <button class="btn btn-secondary">Regenerate</button>
+                <button class="btn btn-secondary">Edit</button>
+                <button class="btn btn-secondary" data-action="close-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
