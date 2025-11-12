@@ -1,0 +1,89 @@
+# CAIT - Core AI Tool .gitignore
+
+# ==================
+# Environment & Secrets
+# ==================
+.env
+.env.*
+!.env.example
+*.pem
+credentials.json
+secrets.json
+config/*_config.json
+!config/cait_config.example.json
+
+# ==================
+# Python
+# ==================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# ==================
+# Next.js / Node.js (web app)
+# ==================
+web/node_modules/
+web/.next/
+web/out/
+web/.vercel
+web/.env*
+web/*.tsbuildinfo
+web/next-env.d.ts
+
+# ==================
+# Supabase
+# ==================
+web/supabase/.branches
+web/supabase/.temp
+web/.snaplet
+
+# ==================
+# Output & Generated Files
+# ==================
+output/
+*.log
+*.csv
+*.xlsx
+*.pdf
+!cait-plan.pdf
+!docs/**/*.pdf
+
+# ==================
+# OS Files
+# ==================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ==================
+# IDE
+# ==================
+.vscode/
+.idea/
+*.sublime-*
+.history/
+
+# ==================
+# Testing
+# ==================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ==================
+# Misc
+# ==================
+*.bak
+*.tmp
+.cache/

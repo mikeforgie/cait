@@ -1,0 +1,19 @@
+{
+  "project_name": "CAIT (Core AI Tool)",
+  "version": "1.0",
+  "last_updated": "2025-10-29",
+  "credentials": {
+    "service_account_file": "credentials/google-search-console-credentials.json",
+    "docs_service_account_file": "credentials.json",
+    "user_email": "mike@nextstepconnect.com"
+  },
+  "settings": {
+    "output_dir": "cait/output",
+    "log_dir": "logs/cait",
+    "schedule": "manual"
+  }
+}
+
+
+
+
