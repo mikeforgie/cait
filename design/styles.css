@@ -8,42 +8,60 @@
    ============================================================================ */
 
 :root {
-    /* Primary Gradient Colors */
-    --color-red: #ef4444;
-    --color-red-light: #fca5a5;
-    --color-red-dark: #991b1b;
+    /* Primary Gradient Colors - BRIGHT & VIBRANT (Red → Green Progress) */
+    --color-red: #ff3333;
+    --color-red-light: #ff6666;
+    --color-red-dark: #dd0000;
+    --color-red-accent: #ff5555;
 
-    --color-yellow: #eab308;
-    --color-yellow-light: #facc15;
-    --color-yellow-dark: #ca8a04;
+    --color-orange: #ff9500;
+    --color-orange-light: #ffb333;
+    --color-orange-dark: #dd7700;
 
-    --color-green: #22c55e;
-    --color-green-light: #86efac;
-    --color-green-dark: #15803d;
+    --color-yellow: #ffcc00;
+    --color-yellow-light: #ffdd33;
+    --color-yellow-dark: #dd9900;
 
-    /* Gradient Definitions */
-    --gradient-primary: linear-gradient(135deg, #ef4444, #eab308, #22c55e);
-    --gradient-primary-reverse: linear-gradient(135deg, #22c55e, #eab308, #ef4444);
-    --gradient-hover: linear-gradient(135deg, #fca5a5, #facc15, #86efac);
+    --color-green: #1eff00;
+    --color-green-light: #66ff66;
+    --color-green-dark: #00cc00;
+    --color-green-accent: #00ff33;
+
+    /* Futuristic Accent - Cyan */
+    --color-cyan: #00d9ff;
+    --color-cyan-light: #33ebff;
+    --color-cyan-dark: #0099cc;
+
+    /* Gradient Definitions - BRIGHT RED TO GREEN PROGRESS */
+    --gradient-primary: linear-gradient(135deg, #ff3333, #ffcc00, #1eff00);
+    --gradient-primary-reverse: linear-gradient(135deg, #1eff00, #ffcc00, #ff3333);
+    --gradient-hover: linear-gradient(135deg, #ff6666, #ffdd33, #66ff66);
+    --gradient-glow: linear-gradient(135deg, #ff3333, #ff9500, #1eff00);
+
+    /* Glowing Box Shadows - FUTURISTIC NEON */
+    --glow-red: 0 0 20px rgba(255, 51, 51, 0.4), 0 0 40px rgba(255, 51, 51, 0.2);
+    --glow-green: 0 0 20px rgba(30, 255, 0, 0.4), 0 0 40px rgba(30, 255, 0, 0.2);
+    --glow-yellow: 0 0 20px rgba(255, 204, 0, 0.3), 0 0 40px rgba(255, 204, 0, 0.15);
+    --glow-cyan: 0 0 20px rgba(0, 217, 255, 0.3), 0 0 40px rgba(0, 217, 255, 0.15);
 
     /* Neutral Colors */
     --color-white: #ffffff;
-    --color-gray-50: #f9fafb;
-    --color-gray-100: #f3f4f6;
-    --color-gray-200: #e5e7eb;
-    --color-gray-300: #d1d5db;
-    --color-gray-400: #9ca3af;
-    --color-gray-500: #6b7280;
-    --color-gray-600: #4b5563;
-    --color-gray-700: #374151;
-    --color-gray-800: #1f2937;
-    --color-gray-900: #111827;
+    --color-gray-50: #f8f9fa;
+    --color-gray-100: #f1f3f5;
+    --color-gray-200: #e9ecef;
+    --color-gray-300: #dee2e6;
+    --color-gray-400: #adb5bd;
+    --color-gray-500: #6c757d;
+    --color-gray-600: #495057;
+    --color-gray-700: #343a40;
+    --color-gray-800: #212529;
+    --color-gray-900: #0f1419;
 
-    /* Status Colors */
-    --color-success: #22c55e;
-    --color-warning: #eab308;
-    --color-danger: #ef4444;
-    --color-info: #3b82f6;
+    /* Status Colors - BRIGHT & CLEAR */
+    --color-success: #1eff00;
+    --color-warning: #ffcc00;
+    --color-danger: #ff3333;
+    --color-info: #00d9ff;
 
     /* Spacing */
     --spacing-xs: 4px;
@@ -80,7 +98,7 @@
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
-    --shadow-gradient: 0 10px 30px rgba(239, 68, 68, 0.1);
+    --shadow-gradient: 0 0 30px rgba(255, 51, 51, 0.2), 0 0 60px rgba(30, 255, 0, 0.1);
 
     /* Transitions */
     --transition-fast: 0.15s ease-in-out;
@@ -441,6 +459,7 @@ body {
     border-radius: var(--radius-full);
     overflow: hidden;
     margin: var(--spacing-md) 0;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar.small {
@@ -452,11 +471,13 @@ body {
     height: 100%;
     background: var(--gradient-primary);
     transition: width var(--transition-base);
+    box-shadow: 0 0 15px rgba(255, 51, 51, 0.3), 0 0 30px rgba(30, 255, 0, 0.2);
 }
 
 .progress-text {
     font-size: var(--text-xs);
     color: var(--color-gray-600);
+    font-weight: var(--font-semibold);
 }
 
 .sub-metrics {
@@ -544,46 +565,58 @@ body {
 
 .status-dot {
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: var(--radius-full);
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    box-shadow: 0 0 8px currentColor;
 }
 
 .status-dot.status-green {
     background-color: var(--color-green);
+    color: var(--color-green);
+    box-shadow: var(--glow-green);
 }
 
 .status-dot.status-yellow {
     background-color: var(--color-yellow);
+    color: var(--color-yellow);
+    box-shadow: var(--glow-yellow);
 }
 
 .status-dot.status-red {
     background-color: var(--color-red);
+    color: var(--color-red);
+    box-shadow: var(--glow-red);
 }
 
 .status-green {
-    color: var(--color-green-dark);
+    color: var(--color-green);
+    font-weight: var(--font-semibold);
 }
 
 .status-yellow {
-    color: var(--color-yellow-dark);
+    color: var(--color-yellow);
+    font-weight: var(--font-semibold);
 }
 
 .status-red {
-    color: var(--color-red-dark);
+    color: var(--color-red);
+    font-weight: var(--font-semibold);
 }
 
 .status-neutral {
     color: var(--color-gray-600);
 }
 
-@keyframes pulse {
+@keyframes pulse-glow {
     0%, 100% {
         opacity: 1;
+        box-shadow: var(--glow-green), 0 0 8px currentColor;
     }
     50% {
-        opacity: 0.5;
+        opacity: 0.7;
+        box-shadow: var(--glow-green), 0 0 12px currentColor;
     }
 }
 
@@ -1174,36 +1207,64 @@ body {
 .btn-primary {
     background: var(--gradient-primary);
     color: var(--color-white);
-    box-shadow: var(--shadow-gradient);
+    box-shadow: var(--glow-red), var(--shadow-gradient);
+    font-weight: var(--font-bold);
+    text-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 2s infinite;
 }
 
 .btn-primary:hover {
     background: var(--gradient-hover);
-    box-shadow: var(--shadow-xl);
+    box-shadow: var(--glow-green), 0 20px 30px rgba(30, 255, 0, 0.2);
     transform: translateY(-2px);
 }
 
 .btn-primary:active {
     transform: translateY(0);
+    box-shadow: var(--glow-green), inset 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes shimmer {
+    0%, 100% { left: -100%; }
+    50% { left: 100%; }
 }
 
 .btn-secondary {
     background-color: var(--color-gray-200);
     color: var(--color-gray-900);
+    border: 2px solid var(--color-gray-300);
+    font-weight: var(--font-semibold);
 }
 
 .btn-secondary:hover {
     background-color: var(--color-gray-300);
+    border-color: var(--color-cyan);
+    color: var(--color-cyan);
 }
 
 .btn-danger {
-    background-color: rgba(239, 68, 68, 0.1);
+    background-color: rgba(255, 51, 51, 0.15);
     color: var(--color-red);
+    border: 2px solid var(--color-red);
+    font-weight: var(--font-semibold);
 }
 
 .btn-danger:hover {
     background-color: var(--color-red);
     color: var(--color-white);
+    box-shadow: var(--glow-red);
 }
 
 .btn-lg {
