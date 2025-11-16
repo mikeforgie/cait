@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { DashboardHeader } from '@/components/layout/DashboardHeader'
+import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 
 export default async function DashboardLayout({
   children,
@@ -17,25 +18,36 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  // Extract user info
+  const email = user.email || 'user@example.com'
+  const name = user.user_metadata?.name || email.split('@')[0]
+  const initials = name
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">CAIT</h1>
-            <p className="text-sm text-neutral-600">Core AI Tool for SEO Automation</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-neutral-600">{user.email}</span>
-            <form action="/auth/signout" method="post">
-              <Button variant="outline" type="submit">
-                Sign Out
-              </Button>
-            </form>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <DashboardHeader
+        user={{
+          name,
+          email,
+          initials
+        }}
+      />
+
+      {/* Sidebar */}
+      <DashboardSidebar />
+
+      {/* Main content area */}
+      <main className="pl-64 pt-16">
+        <div className="p-8">
+          {children}
         </div>
-      </header>
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      </main>
     </div>
   )
 }
