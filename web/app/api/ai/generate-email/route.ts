@@ -3,6 +3,7 @@ import { generateAIResponse } from '@/lib/ai/anthropic-client';
 import { generateEmailOutreachPrompt, EmailOutreachParams } from '@/lib/ai/prompts';
 import { saveGeneratedContent } from '@/lib/ai/content-storage';
 import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
+import { logSEOAction } from '@/lib/attribution/action-logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,6 +93,28 @@ export async function POST(request: NextRequest) {
       inputText: prompt,
       outputText: content,
       context: { recipientWebsite, approach, tone },
+    });
+
+    // Log SEO action for attribution
+    // Outreach emails can lead to backlinks, which improve rankings
+    await logSEOAction({
+      clientId,
+      actionType: 'backlink_acquired', // Potential backlink
+      actionCategory: 'off_page',
+      targetType: 'page',
+      targetUrl: linkTarget,
+      actionDetails: {
+        outreachType: approach,
+        recipientWebsite,
+        recipientName,
+        tone,
+        automated: true,
+        generatedContentId: savedContent?.id,
+        emailSubject: title,
+      },
+      timeInvestedMinutes: 1, // AI generation
+      automated: true,
+      performedBy: 'ai',
     });
 
     return NextResponse.json({
