@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { ArrowLeft, FileText, Mail, Tag } from 'lucide-react';
 import { BlogPostGenerator } from '@/components/content/blog-post-generator';
 import { EmailOutreachGenerator } from '@/components/content/email-outreach-generator';
+import { ContentLibrary } from '@/components/content/content-library';
+import { getClientGeneratedContent, getContentStats } from '@/lib/ai/content-storage';
+import { getClientUsage } from '@/lib/ai/usage-tracking';
 
 export default async function ContentGenerationPage({
   params,
@@ -36,6 +39,15 @@ export default async function ContentGenerationPage({
     .limit(10);
 
   const suggestedKeywords = keywords?.map((k) => k.keyword) || [];
+
+  // Fetch generated content history
+  const generatedContent = await getClientGeneratedContent(clientId);
+
+  // Get content stats
+  const contentStats = await getContentStats(clientId);
+
+  // Get usage information
+  const usage = await getClientUsage(clientId);
 
   return (
     <div className="space-y-6">
@@ -125,7 +137,18 @@ export default async function ContentGenerationPage({
         />
       </div>
 
-      {/* Usage Stats (placeholder) */}
+      {/* Content Library */}
+      {generatedContent.length > 0 && (
+        <div className="pt-12">
+          <h2 className="text-2xl font-bold mb-6">Content Library</h2>
+          <ContentLibrary
+            initialContent={generatedContent}
+            clientId={clientId}
+          />
+        </div>
+      )}
+
+      {/* Usage Stats */}
       <Card>
         <CardHeader>
           <CardTitle>AI Usage This Month</CardTitle>
@@ -135,20 +158,29 @@ export default async function ContentGenerationPage({
           <div className="grid gap-4 md:grid-cols-4">
             <div>
               <p className="text-sm text-neutral-600">Blog Posts</p>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">{contentStats.blog_posts}</p>
             </div>
             <div>
               <p className="text-sm text-neutral-600">Emails</p>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">{contentStats.emails}</p>
             </div>
             <div>
               <p className="text-sm text-neutral-600">Meta Descriptions</p>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">{contentStats.meta_descriptions}</p>
             </div>
             <div>
               <p className="text-sm text-neutral-600">Total AI Actions</p>
-              <p className="text-2xl font-bold">0 / 500</p>
-              <p className="text-xs text-neutral-600">Professional Plan</p>
+              <p className="text-2xl font-bold">
+                {usage?.current_month_usage || 0} / {usage?.monthly_limit || 500}
+              </p>
+              <p className="text-xs text-neutral-600 capitalize">
+                {usage?.plan_tier || 'Professional'} Plan
+              </p>
+              {usage && usage.usage_percentage > 80 && (
+                <p className="text-xs text-orange-600 mt-1">
+                  {usage.remaining} actions remaining
+                </p>
+              )}
             </div>
           </div>
         </CardContent>

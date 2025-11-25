@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAIResponse } from '@/lib/ai/anthropic-client';
 import { generateEmailOutreachPrompt, EmailOutreachParams } from '@/lib/ai/prompts';
+import { saveGeneratedContent } from '@/lib/ai/content-storage';
+import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,10 +21,23 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!recipientWebsite || !yourWebsite || !linkTarget) {
+    if (!clientId || !recipientWebsite || !yourWebsite || !linkTarget) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      );
+    }
+
+    // Check usage limits
+    const { allowed, usage } = await checkUsageLimit(clientId);
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: 'Monthly usage limit reached',
+          usage,
+          message: `You've used ${usage.current_month_usage} of ${usage.monthly_limit} AI actions this month.`,
+        },
+        { status: 429 }
       );
     }
 
@@ -51,22 +66,47 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // TODO: Save to database
-    // await saveGeneratedContent({
-    //   clientId,
-    //   contentType: 'outreach_email',
-    //   prompt,
-    //   content,
-    //   metadata: { recipientWebsite, approach, tone },
-    // });
+    // Extract subject line
+    const lines = content.split('\n');
+    const subjectLineMatch = lines[0].match(/Subject:\s*(.+)/i);
+    const title = subjectLineMatch
+      ? `Outreach: ${subjectLineMatch[1].substring(0, 50)}`
+      : `Outreach to ${recipientWebsite}`;
+
+    // Save to database
+    const savedContent = await saveGeneratedContent({
+      clientId,
+      contentType: 'outreach_email',
+      title,
+      content,
+      prompt,
+      modelUsed: 'claude-3-5-sonnet-20241022',
+      metadata: { recipientWebsite, recipientName, approach, tone, linkTarget },
+    });
+
+    // Track usage
+    await trackAIUsage({
+      clientId,
+      actionType: 'email_generation',
+      modelType: 'content',
+      inputText: prompt,
+      outputText: content,
+      context: { recipientWebsite, approach, tone },
+    });
 
     return NextResponse.json({
       success: true,
       content,
+      contentId: savedContent?.id,
       metadata: {
         approach,
         tone,
         recipientWebsite,
+      },
+      usage: {
+        current: usage.current_month_usage + 1,
+        limit: usage.monthly_limit,
+        remaining: usage.remaining - 1,
       },
     });
   } catch (error: any) {
