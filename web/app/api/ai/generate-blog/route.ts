@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAIResponse } from '@/lib/ai/anthropic-client';
 import { generateBlogPostPrompt, BlogPostParams } from '@/lib/ai/prompts';
+import { saveGeneratedContent } from '@/lib/ai/content-storage';
+import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
+import { logSEOAction } from '@/lib/attribution/action-logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,10 +23,23 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!keyword || !businessName) {
+    if (!keyword || !businessName || !clientId) {
       return NextResponse.json(
-        { error: 'Missing required fields: keyword and businessName' },
+        { error: 'Missing required fields: keyword, businessName, and clientId' },
         { status: 400 }
+      );
+    }
+
+    // Check usage limits
+    const { allowed, usage } = await checkUsageLimit(clientId);
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: 'Monthly usage limit reached',
+          usage,
+          message: `You've used ${usage.current_month_usage} of ${usage.monthly_limit} AI actions this month. Upgrade your plan or add your own API key for unlimited usage.`,
+        },
+        { status: 429 } // Too Many Requests
       );
     }
 
@@ -53,25 +69,68 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // TODO: Save to database
-    // await saveGeneratedContent({
-    //   clientId,
-    //   contentType: 'blog_post',
-    //   prompt,
-    //   content,
-    //   metadata: { keyword, wordCount, tone },
-    // });
+    // Extract title from content (first H1)
+    const titleMatch = content.match(/^#\s+(.+)$/m);
+    const title = titleMatch ? titleMatch[1] : `Blog Post: ${keyword}`;
 
-    // TODO: Track usage
-    // await trackAIUsage(clientId, 'blog_generation', estimateTokens(prompt + content));
+    // Save to database
+    const savedContent = await saveGeneratedContent({
+      clientId,
+      contentType: 'blog_post',
+      title,
+      content,
+      prompt,
+      modelUsed: 'claude-3-5-sonnet-20241022',
+      metadata: { keyword, wordCount, tone, includeIntro, includeConclusion, includeCTA },
+    });
+
+    // Track usage
+    await trackAIUsage({
+      clientId,
+      actionType: 'blog_generation',
+      modelType: 'content',
+      inputText: prompt,
+      outputText: content,
+      context: { keyword, wordCount, tone },
+    });
+
+    // Log SEO action for attribution
+    // Note: This logs content GENERATION. When user actually publishes it,
+    // we should log another action with the actual published URL
+    await logSEOAction({
+      clientId,
+      actionType: 'blog_post_published',
+      actionCategory: 'content',
+      targetType: 'keyword',
+      targetId: keyword,
+      actionDetails: {
+        contentType: 'blog_post',
+        wordCount: content.split(/\s+/).length,
+        keywordsTargeted: [keyword],
+        tone,
+        title,
+        automated: true,
+        generatedContentId: savedContent?.id,
+      },
+      timeInvestedMinutes: 2, // AI generation is fast
+      automated: true,
+      performedBy: 'ai',
+    });
 
     return NextResponse.json({
       success: true,
       content,
+      contentId: savedContent?.id,
       metadata: {
         keyword,
         wordCount: content.split(/\s+/).length,
         tone,
+        title,
+      },
+      usage: {
+        current: usage.current_month_usage + 1,
+        limit: usage.monthly_limit,
+        remaining: usage.remaining - 1,
       },
     });
   } catch (error: any) {
