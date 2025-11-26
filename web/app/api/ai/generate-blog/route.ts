@@ -4,6 +4,7 @@ import { generateBlogPostPrompt, BlogPostParams } from '@/lib/ai/prompts';
 import { saveGeneratedContent } from '@/lib/ai/content-storage';
 import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
 import { calculateBlogPostCredits } from '@/lib/ai/credits';
+import { getBusinessKnowledgeContext, buildContextPrompt } from '@/lib/intelligence/knowledge-context';
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,6 +60,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get business knowledge context
+    const businessContext = await getBusinessKnowledgeContext(clientId);
+    const contextPrompt = buildContextPrompt(businessContext);
+
     // Build prompt parameters
     const params: BlogPostParams = {
       keyword,
@@ -73,11 +78,16 @@ export async function POST(request: NextRequest) {
     };
 
     // Generate prompt
-    const prompt = generateBlogPostPrompt(params);
+    const basePrompt = generateBlogPostPrompt(params);
+
+    // Inject business context into prompt
+    const enhancedPrompt = contextPrompt
+      ? `${contextPrompt}\n\n---\n\n${basePrompt}`
+      : basePrompt;
 
     // Call AI
     const content = await generateAIResponse(
-      [{ role: 'user', content: prompt }],
+      [{ role: 'user', content: enhancedPrompt }],
       {
         model: 'content', // Use Sonnet for quality
         maxTokens: Math.ceil(wordCount * 1.5), // Estimate tokens needed
@@ -95,7 +105,7 @@ export async function POST(request: NextRequest) {
       contentType: 'blog_post',
       title,
       content,
-      prompt,
+      prompt: enhancedPrompt,
       modelUsed: 'claude-3-5-sonnet-20241022',
       metadata: { keyword, wordCount, tone, includeIntro, includeConclusion, includeCTA },
     });
@@ -105,7 +115,7 @@ export async function POST(request: NextRequest) {
       clientId,
       actionType: 'blog_generation',
       modelType: 'content',
-      inputText: prompt,
+      inputText: enhancedPrompt,
       outputText: content,
       context: { keyword, wordCount, tone },
       credits: creditsNeeded,

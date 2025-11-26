@@ -4,6 +4,7 @@ import { generateEmailOutreachPrompt, EmailOutreachParams } from '@/lib/ai/promp
 import { saveGeneratedContent } from '@/lib/ai/content-storage';
 import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
 import { CREDIT_COSTS } from '@/lib/ai/credits';
+import { getBusinessKnowledgeContext, buildContextPrompt } from '@/lib/intelligence/knowledge-context';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,6 +59,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get business knowledge context
+    const businessContext = await getBusinessKnowledgeContext(clientId);
+    const contextPrompt = buildContextPrompt(businessContext);
+
     // Build prompt parameters
     const params: EmailOutreachParams = {
       recipientName,
@@ -71,11 +76,16 @@ export async function POST(request: NextRequest) {
     };
 
     // Generate prompt
-    const prompt = generateEmailOutreachPrompt(params);
+    const basePrompt = generateEmailOutreachPrompt(params);
+
+    // Inject business context into prompt
+    const enhancedPrompt = contextPrompt
+      ? `${contextPrompt}\n\n---\n\n${basePrompt}`
+      : basePrompt;
 
     // Call AI
     const content = await generateAIResponse(
-      [{ role: 'user', content: prompt }],
+      [{ role: 'user', content: enhancedPrompt }],
       {
         model: 'content', // Use Sonnet for quality
         maxTokens: 1000, // Emails are short
@@ -96,7 +106,7 @@ export async function POST(request: NextRequest) {
       contentType: 'outreach_email',
       title,
       content,
-      prompt,
+      prompt: enhancedPrompt,
       modelUsed: 'claude-3-5-sonnet-20241022',
       metadata: { recipientWebsite, recipientName, approach, tone, linkTarget },
     });
@@ -106,7 +116,7 @@ export async function POST(request: NextRequest) {
       clientId,
       actionType: 'email_generation',
       modelType: 'content',
-      inputText: prompt,
+      inputText: enhancedPrompt,
       outputText: content,
       context: { recipientWebsite, approach, tone },
       credits: creditsNeeded,
