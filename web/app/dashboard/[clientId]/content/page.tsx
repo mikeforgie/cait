@@ -152,7 +152,7 @@ export default async function ContentGenerationPage({
       <Card>
         <CardHeader>
           <CardTitle>AI Usage This Month</CardTitle>
-          <CardDescription>Track your AI-powered content generation</CardDescription>
+          <CardDescription>Track your AI credit usage and content generation</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
@@ -169,7 +169,7 @@ export default async function ContentGenerationPage({
               <p className="text-2xl font-bold">{contentStats.meta_descriptions}</p>
             </div>
             <div>
-              <p className="text-sm text-neutral-600">Total AI Actions</p>
+              <p className="text-sm text-neutral-600">Credits Used</p>
               <p className="text-2xl font-bold">
                 {usage?.current_month_usage || 0} / {usage?.monthly_limit || 500}
               </p>
@@ -178,10 +178,32 @@ export default async function ContentGenerationPage({
               </p>
               {usage && usage.usage_percentage > 80 && (
                 <p className="text-xs text-orange-600 mt-1">
-                  {usage.remaining} actions remaining
+                  {usage.remaining} credits remaining
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Credit Cost Reference */}
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-sm font-medium text-neutral-700 mb-2">Credit Costs:</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-neutral-600">
+              <div>
+                <span className="font-medium">Blog (1500w):</span> 8 credits
+              </div>
+              <div>
+                <span className="font-medium">Email:</span> 2 credits
+              </div>
+              <div>
+                <span className="font-medium">Outline:</span> 1 credit
+              </div>
+              <div>
+                <span className="font-medium">Chat:</span> 1 credit
+              </div>
+            </div>
+            <p className="text-xs text-neutral-500 mt-2">
+              💡 Longer blog posts use more credits. 1 credit ≈ 5,000 AI tokens
+            </p>
           </div>
         </CardContent>
       </Card>

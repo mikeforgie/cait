@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Copy, Download, Send, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles, Copy, Download, Send, Loader2, Coins } from 'lucide-react';
+import { calculateBlogPostCredits } from '@/lib/ai/credits';
 
 interface BlogPostGeneratorProps {
   clientId: string;
@@ -33,6 +35,12 @@ export function BlogPostGenerator({
   const [generatedContent, setGeneratedContent] = useState('');
   const [outline, setOutline] = useState('');
   const [showOutline, setShowOutline] = useState(false);
+  const [error, setError] = useState('');
+
+  // Calculate credit cost based on word count
+  const creditCost = useMemo(() => {
+    return calculateBlogPostCredits(wordCount);
+  }, [wordCount]);
 
   const handleGenerateOutline = async () => {
     if (!keyword.trim()) return;
@@ -65,9 +73,9 @@ export function BlogPostGenerator({
     if (!keyword.trim()) return;
 
     setGenerating(true);
+    setError('');
 
     try {
-      // TODO: Call API to generate blog post
       const response = await fetch('/api/ai/generate-blog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,10 +94,22 @@ export function BlogPostGenerator({
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        // Handle credit limit errors
+        if (data.error === 'Insufficient credits' || data.error === 'Monthly credit limit reached') {
+          setError(data.message || data.error);
+        } else {
+          setError(data.error || 'Failed to generate blog post');
+        }
+        return;
+      }
+
       setGeneratedContent(data.content);
+      setError('');
     } catch (error) {
       console.error('Failed to generate blog post:', error);
-      setGeneratedContent('Failed to generate blog post. Please try again.');
+      setError('Failed to generate blog post. Please try again.');
     } finally {
       setGenerating(false);
     }
@@ -230,6 +250,29 @@ export function BlogPostGenerator({
             </div>
           </div>
 
+          {/* Credit Cost Preview */}
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">Credit Cost</span>
+              </div>
+              <Badge variant="outline" className="bg-white border-blue-300 text-blue-700">
+                {creditCost} {creditCost === 1 ? 'credit' : 'credits'}
+              </Badge>
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              This {wordCount}-word blog post will use {creditCost} credits
+            </p>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
           {/* Generate Buttons */}
           <div className="space-y-2">
             <Button
@@ -246,7 +289,7 @@ export function BlogPostGenerator({
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Preview Outline
+                  Preview Outline (Free)
                 </>
               )}
             </Button>
@@ -264,7 +307,7 @@ export function BlogPostGenerator({
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Full Blog Post
+                  Generate Full Blog Post ({creditCost} credits)
                 </>
               )}
             </Button>
