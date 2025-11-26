@@ -4,6 +4,7 @@ import { generateEmailOutreachPrompt, EmailOutreachParams } from '@/lib/ai/promp
 import { saveGeneratedContent } from '@/lib/ai/content-storage';
 import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
 import { logSEOAction } from '@/lib/attribution/action-logger';
+import { CREDIT_COSTS } from '@/lib/ai/credits';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,14 +30,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Calculate credits needed
+    const creditsNeeded = CREDIT_COSTS.outreach_email;
+
     // Check usage limits
     const { allowed, usage } = await checkUsageLimit(clientId);
     if (!allowed) {
       return NextResponse.json(
         {
-          error: 'Monthly usage limit reached',
+          error: 'Monthly credit limit reached',
           usage,
-          message: `You've used ${usage.current_month_usage} of ${usage.monthly_limit} AI actions this month.`,
+          message: `You've used ${usage.current_month_usage} of ${usage.monthly_limit} credits this month.`,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Check if user has enough credits
+    if (usage.remaining < creditsNeeded) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient credits',
+          usage,
+          creditsNeeded,
+          message: `This email requires ${creditsNeeded} credits, but you only have ${usage.remaining} remaining.`,
         },
         { status: 429 }
       );
@@ -85,14 +102,15 @@ export async function POST(request: NextRequest) {
       metadata: { recipientWebsite, recipientName, approach, tone, linkTarget },
     });
 
-    // Track usage
-    await trackAIUsage({
+    // Track usage with credits
+    const { credits: actualCreditsUsed } = await trackAIUsage({
       clientId,
       actionType: 'email_generation',
       modelType: 'content',
       inputText: prompt,
       outputText: content,
       context: { recipientWebsite, approach, tone },
+      credits: creditsNeeded,
     });
 
     // Log SEO action for attribution
@@ -126,10 +144,11 @@ export async function POST(request: NextRequest) {
         tone,
         recipientWebsite,
       },
-      usage: {
-        current: usage.current_month_usage + 1,
+      credits: {
+        used: actualCreditsUsed,
+        total_used: usage.current_month_usage + actualCreditsUsed,
         limit: usage.monthly_limit,
-        remaining: usage.remaining - 1,
+        remaining: usage.remaining - actualCreditsUsed,
       },
     });
   } catch (error: any) {

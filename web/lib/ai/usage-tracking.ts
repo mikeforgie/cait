@@ -6,6 +6,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { estimateTokens, estimateCost } from './anthropic-client';
 import type { AIModelType } from './anthropic-client';
+import { calculateCredits, creditsFromTokens } from './credits';
 
 export interface UsageRecord {
   id: string;
@@ -39,13 +40,28 @@ export async function trackAIUsage(params: {
   inputText: string;
   outputText: string;
   context?: any;
-}): Promise<boolean> {
+  credits?: number; // Optional: pre-calculated credits
+}): Promise<{ credits: number; success: boolean }> {
   const supabase = await createClient();
 
   // Estimate tokens
   const inputTokens = estimateTokens(params.inputText);
   const outputTokens = estimateTokens(params.outputText);
   const totalTokens = inputTokens + outputTokens;
+
+  // Calculate credits
+  // Use pre-calculated credits if provided, otherwise calculate from tokens or context
+  let credits = params.credits;
+  if (!credits) {
+    if (params.context?.wordCount) {
+      credits = calculateCredits({
+        actionType: params.actionType,
+        wordCount: params.context.wordCount,
+      });
+    } else {
+      credits = creditsFromTokens(inputTokens, outputTokens);
+    }
+  }
 
   // Estimate cost
   const costDollars = estimateCost(inputTokens, outputTokens, params.modelType);
@@ -73,19 +89,19 @@ export async function trackAIUsage(params: {
 
   if (error) {
     console.error('Error tracking AI usage:', error);
-    return false;
+    return { credits, success: false };
   }
 
-  // Increment client's monthly usage counter
-  await incrementClientUsage(params.clientId);
+  // Increment client's monthly usage counter by credits used
+  await incrementClientUsage(params.clientId, credits);
 
-  return true;
+  return { credits, success: true };
 }
 
 /**
- * Increment client's monthly usage counter
+ * Increment client's monthly usage counter by credits
  */
-async function incrementClientUsage(clientId: string): Promise<void> {
+async function incrementClientUsage(clientId: string, credits: number): Promise<void> {
   const supabase = await createClient();
 
   // Get or create client AI settings
@@ -101,14 +117,14 @@ async function incrementClientUsage(clientId: string): Promise<void> {
       client_id: clientId,
       plan_tier: 'professional',
       monthly_limit: 500,
-      current_month_usage: 1,
+      current_month_usage: credits,
     });
   } else {
-    // Increment usage
+    // Increment usage by credits
     await supabase
       .from('client_ai_settings')
       .update({
-        current_month_usage: (settings.current_month_usage || 0) + 1,
+        current_month_usage: (settings.current_month_usage || 0) + credits,
       })
       .eq('client_id', clientId);
   }

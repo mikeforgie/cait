@@ -4,6 +4,7 @@ import { generateBlogPostPrompt, BlogPostParams } from '@/lib/ai/prompts';
 import { saveGeneratedContent } from '@/lib/ai/content-storage';
 import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
 import { logSEOAction } from '@/lib/attribution/action-logger';
+import { calculateBlogPostCredits } from '@/lib/ai/credits';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,16 +31,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Calculate credits needed for this generation
+    const creditsNeeded = calculateBlogPostCredits(wordCount);
+
     // Check usage limits
     const { allowed, usage } = await checkUsageLimit(clientId);
     if (!allowed) {
       return NextResponse.json(
         {
-          error: 'Monthly usage limit reached',
+          error: 'Monthly credit limit reached',
           usage,
-          message: `You've used ${usage.current_month_usage} of ${usage.monthly_limit} AI actions this month. Upgrade your plan or add your own API key for unlimited usage.`,
+          message: `You've used ${usage.current_month_usage} of ${usage.monthly_limit} credits this month. Upgrade your plan or add your own API key for unlimited usage.`,
         },
         { status: 429 } // Too Many Requests
+      );
+    }
+
+    // Check if user has enough credits for this specific generation
+    if (usage.remaining < creditsNeeded) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient credits',
+          usage,
+          creditsNeeded,
+          message: `This blog post requires ${creditsNeeded} credits, but you only have ${usage.remaining} remaining. Try a shorter word count or upgrade your plan.`,
+        },
+        { status: 429 }
       );
     }
 
@@ -84,14 +101,15 @@ export async function POST(request: NextRequest) {
       metadata: { keyword, wordCount, tone, includeIntro, includeConclusion, includeCTA },
     });
 
-    // Track usage
-    await trackAIUsage({
+    // Track usage with calculated credits
+    const { credits: actualCreditsUsed } = await trackAIUsage({
       clientId,
       actionType: 'blog_generation',
       modelType: 'content',
       inputText: prompt,
       outputText: content,
       context: { keyword, wordCount, tone },
+      credits: creditsNeeded,
     });
 
     // Log SEO action for attribution
@@ -127,10 +145,11 @@ export async function POST(request: NextRequest) {
         tone,
         title,
       },
-      usage: {
-        current: usage.current_month_usage + 1,
+      credits: {
+        used: actualCreditsUsed,
+        total_used: usage.current_month_usage + actualCreditsUsed,
         limit: usage.monthly_limit,
-        remaining: usage.remaining - 1,
+        remaining: usage.remaining - actualCreditsUsed,
       },
     });
   } catch (error: any) {

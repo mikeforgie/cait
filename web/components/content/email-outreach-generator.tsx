@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Copy, Send, Loader2, Mail } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles, Copy, Send, Loader2, Mail, Coins } from 'lucide-react';
+import { CREDIT_COSTS } from '@/lib/ai/credits';
 
 interface EmailOutreachGeneratorProps {
   clientId: string;
@@ -31,11 +33,13 @@ export function EmailOutreachGenerator({
   const [generating, setGenerating] = useState(false);
   const [generatedEmail, setGeneratedEmail] = useState('');
   const [subjectLine, setSubjectLine] = useState('');
+  const [error, setError] = useState('');
 
   const handleGenerate = async () => {
     if (!recipientWebsite.trim() || !linkTarget.trim()) return;
 
     setGenerating(true);
+    setError('');
 
     try {
       const response = await fetch('/api/ai/generate-email', {
@@ -56,6 +60,16 @@ export function EmailOutreachGenerator({
 
       const data = await response.json();
 
+      if (!response.ok) {
+        // Handle credit limit errors
+        if (data.error === 'Insufficient credits' || data.error === 'Monthly credit limit reached') {
+          setError(data.message || data.error);
+        } else {
+          setError(data.error || 'Failed to generate email');
+        }
+        return;
+      }
+
       // Parse subject line from generated content
       const lines = data.content.split('\n');
       const subjectLineMatch = lines[0].match(/Subject:\s*(.+)/i);
@@ -65,9 +79,10 @@ export function EmailOutreachGenerator({
       } else {
         setGeneratedEmail(data.content);
       }
+      setError('');
     } catch (error) {
       console.error('Failed to generate email:', error);
-      setGeneratedEmail('Failed to generate email. Please try again.');
+      setError('Failed to generate email. Please try again.');
     } finally {
       setGenerating(false);
     }
@@ -188,6 +203,29 @@ export function EmailOutreachGenerator({
             </div>
           </div>
 
+          {/* Credit Cost Preview */}
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">Credit Cost</span>
+              </div>
+              <Badge variant="outline" className="bg-white border-blue-300 text-blue-700">
+                {CREDIT_COSTS.outreach_email} credits
+              </Badge>
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              Each outreach email uses {CREDIT_COSTS.outreach_email} credits
+            </p>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
           {/* Generate Button */}
           <Button
             onClick={handleGenerate}
@@ -202,7 +240,7 @@ export function EmailOutreachGenerator({
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate Outreach Email
+                Generate Outreach Email ({CREDIT_COSTS.outreach_email} credits)
               </>
             )}
           </Button>
