@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { logSEOAction, type SEOActionType, type SEOActionCategory } from '@/lib/attribution/action-logger';
 
 export interface GeneratedContent {
   id: string;
@@ -134,6 +135,137 @@ export async function markContentAsUsed(
   }
 
   return true;
+}
+
+/**
+ * Mark content as published and log as SEO action
+ */
+export async function markContentAsPublished(params: {
+  contentId: string;
+  clientId: string;
+  usageLocation: string;
+  publishedUrl?: string;
+}): Promise<GeneratedContent | null> {
+  const supabase = await createClient();
+
+  try {
+    // Get the content first to log proper action
+    const { data: content, error: fetchError } = await supabase
+      .from('ai_generated_content')
+      .select('*')
+      .eq('id', params.contentId)
+      .single();
+
+    if (fetchError || !content) {
+      console.error('Error fetching content for publishing:', fetchError);
+      return null;
+    }
+
+    // Update content as used
+    const { data: updatedContent, error: updateError } = await supabase
+      .from('ai_generated_content')
+      .update({
+        used: true,
+        used_at: new Date().toISOString(),
+        usage_location: params.usageLocation,
+      })
+      .eq('id', params.contentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error marking content as published:', updateError);
+      return null;
+    }
+
+    // Log as SEO action
+    await logContentPublishAction(
+      content,
+      params.clientId,
+      params.publishedUrl
+    );
+
+    return updatedContent;
+  } catch (error) {
+    console.error('Failed to mark content as published:', error);
+    return null;
+  }
+}
+
+/**
+ * Log content publication as SEO action
+ */
+async function logContentPublishAction(
+  content: GeneratedContent,
+  clientId: string,
+  publishedUrl?: string
+) {
+  // Determine action type based on content type
+  let actionType: SEOActionType;
+  let actionCategory: SEOActionCategory;
+  let targetType: 'page' | 'keyword' | 'site' | 'image' = 'page';
+
+  switch (content.content_type) {
+    case 'blog_post':
+      actionType = 'blog_post_published';
+      actionCategory = 'content';
+      break;
+    case 'outreach_email':
+      actionType = 'guest_post_published'; // Outreach for backlinks
+      actionCategory = 'off_page';
+      targetType = 'site';
+      break;
+    case 'meta_description':
+      actionType = 'meta_description_updated';
+      actionCategory = 'on_page';
+      break;
+    default:
+      return; // Don't log unknown types
+  }
+
+  const metadata = content.metadata || {};
+
+  await logSEOAction({
+    clientId,
+    actionType,
+    actionCategory,
+    targetType,
+    targetUrl: publishedUrl || metadata.targetUrl,
+    actionDetails: {
+      contentType: content.content_type,
+      title: content.title,
+      wordCount: metadata.wordCount,
+      keywordsTargeted: metadata.keyword ? [metadata.keyword] : [],
+      publishedUrl,
+      automated: true,
+      generatedAt: content.created_at,
+      publishedAt: new Date().toISOString(),
+      aiGenerated: true,
+      ...metadata,
+    },
+    automated: true,
+    performedBy: 'ai',
+    timeInvestedMinutes: estimateTimeInvested(content.content_type, metadata.wordCount),
+  });
+}
+
+/**
+ * Estimate time that would have been invested manually
+ */
+function estimateTimeInvested(contentType: string, wordCount?: number): number {
+  switch (contentType) {
+    case 'blog_post':
+      // Estimate 1 hour per 500 words for manual writing
+      return Math.ceil((wordCount || 1500) / 500) * 60;
+    case 'outreach_email':
+      // 15 minutes to research and write personalized email
+      return 15;
+    case 'meta_description':
+      // 5 minutes per meta description
+      return 5;
+    default:
+      return 10;
+  }
 }
 
 /**

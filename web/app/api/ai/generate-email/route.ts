@@ -3,7 +3,6 @@ import { generateAIResponse } from '@/lib/ai/anthropic-client';
 import { generateEmailOutreachPrompt, EmailOutreachParams } from '@/lib/ai/prompts';
 import { saveGeneratedContent } from '@/lib/ai/content-storage';
 import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
-import { logSEOAction } from '@/lib/attribution/action-logger';
 import { CREDIT_COSTS } from '@/lib/ai/credits';
 
 export async function POST(request: NextRequest) {
@@ -113,27 +112,8 @@ export async function POST(request: NextRequest) {
       credits: creditsNeeded,
     });
 
-    // Log SEO action for attribution
-    // Outreach emails can lead to backlinks, which improve rankings
-    await logSEOAction({
-      clientId,
-      actionType: 'backlink_acquired', // Potential backlink
-      actionCategory: 'off_page',
-      targetType: 'page',
-      targetUrl: linkTarget,
-      actionDetails: {
-        outreachType: approach,
-        recipientWebsite,
-        recipientName,
-        tone,
-        automated: true,
-        generatedContentId: savedContent?.id,
-        emailSubject: title,
-      },
-      timeInvestedMinutes: 1, // AI generation
-      automated: true,
-      performedBy: 'ai',
-    });
+    // Note: SEO action will be logged when email is actually sent
+    // Use the markContentAsPublished() function to log the attribution action
 
     return NextResponse.json({
       success: true,

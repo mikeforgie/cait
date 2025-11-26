@@ -32,8 +32,11 @@ export function EmailOutreachGenerator({
 
   const [generating, setGenerating] = useState(false);
   const [generatedEmail, setGeneratedEmail] = useState('');
+  const [contentId, setContentId] = useState<string | null>(null);
   const [subjectLine, setSubjectLine] = useState('');
   const [error, setError] = useState('');
+  const [isSent, setIsSent] = useState(false);
+  const [tracking, setTracking] = useState(false);
 
   const handleGenerate = async () => {
     if (!recipientWebsite.trim() || !linkTarget.trim()) return;
@@ -79,6 +82,8 @@ export function EmailOutreachGenerator({
       } else {
         setGeneratedEmail(data.content);
       }
+      setContentId(data.contentId); // Store content ID for tracking later
+      setIsSent(false); // Reset sent state
       setError('');
     } catch (error) {
       console.error('Failed to generate email:', error);
@@ -98,6 +103,39 @@ export function EmailOutreachGenerator({
     // TODO: Implement email sending via Gmail API or user's email client
     const mailtoLink = `mailto:?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(generatedEmail)}`;
     window.location.href = mailtoLink;
+  };
+
+  const handleMarkSent = async () => {
+    if (!contentId) return;
+
+    setTracking(true);
+
+    try {
+      const response = await fetch('/api/ai/content/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentId,
+          clientId,
+          usageLocation: 'email_sent',
+          publishedUrl: linkTarget, // Track the page we're trying to get backlink for
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Failed to mark as sent:', data.error);
+        return;
+      }
+
+      setIsSent(true);
+      // TODO: Show success toast
+    } catch (error) {
+      console.error('Failed to mark email as sent:', error);
+    } finally {
+      setTracking(false);
+    }
   };
 
   const approachDescriptions = {
@@ -308,6 +346,41 @@ export function EmailOutreachGenerator({
                   Regenerate Different Version
                 </Button>
               </div>
+
+              {/* Attribution Tracking */}
+              {!isSent && contentId && (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-3 space-y-2">
+                  <p className="text-sm font-medium text-green-900">Track Your Outreach</p>
+                  <p className="text-xs text-green-700">
+                    Mark this email as sent to track its impact on backlinks and SEO performance
+                  </p>
+                  <Button
+                    onClick={handleMarkSent}
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-white"
+                    disabled={tracking}
+                  >
+                    {tracking ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        Tracking...
+                      </>
+                    ) : (
+                      'Mark as Sent for Attribution Tracking'
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {isSent && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                  <p className="text-sm font-medium text-blue-900">✓ Tracked</p>
+                  <p className="text-xs text-blue-700">
+                    This outreach is being tracked. Monitor backlink acquisition in your dashboard.
+                  </p>
+                </div>
+              )}
 
               {/* Tips */}
               <div className="rounded-lg border bg-blue-50 p-3 text-sm">
