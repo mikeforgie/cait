@@ -425,6 +425,11 @@ export function ConnectionsCard({
                           {connection.connectedCount} of {connection.totalCount} services configured
                         </p>
                       )}
+                      {connection.status === 'not_connected' && !isExpanded && (
+                        <p className="text-xs text-blue-600 font-medium mt-1">
+                          Click to connect →
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 ml-4">
