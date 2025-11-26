@@ -3,7 +3,6 @@ import { generateAIResponse } from '@/lib/ai/anthropic-client';
 import { generateBlogPostPrompt, BlogPostParams } from '@/lib/ai/prompts';
 import { saveGeneratedContent } from '@/lib/ai/content-storage';
 import { trackAIUsage, checkUsageLimit } from '@/lib/ai/usage-tracking';
-import { logSEOAction } from '@/lib/attribution/action-logger';
 import { calculateBlogPostCredits } from '@/lib/ai/credits';
 
 export async function POST(request: NextRequest) {
@@ -112,28 +111,8 @@ export async function POST(request: NextRequest) {
       credits: creditsNeeded,
     });
 
-    // Log SEO action for attribution
-    // Note: This logs content GENERATION. When user actually publishes it,
-    // we should log another action with the actual published URL
-    await logSEOAction({
-      clientId,
-      actionType: 'blog_post_published',
-      actionCategory: 'content',
-      targetType: 'keyword',
-      targetId: keyword,
-      actionDetails: {
-        contentType: 'blog_post',
-        wordCount: content.split(/\s+/).length,
-        keywordsTargeted: [keyword],
-        tone,
-        title,
-        automated: true,
-        generatedContentId: savedContent?.id,
-      },
-      timeInvestedMinutes: 2, // AI generation is fast
-      automated: true,
-      performedBy: 'ai',
-    });
+    // Note: SEO action will be logged when content is actually published
+    // Use the markContentAsPublished() function to log the attribution action
 
     return NextResponse.json({
       success: true,

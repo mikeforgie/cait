@@ -33,9 +33,12 @@ export function BlogPostGenerator({
 
   const [generating, setGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
+  const [contentId, setContentId] = useState<string | null>(null);
   const [outline, setOutline] = useState('');
   const [showOutline, setShowOutline] = useState(false);
   const [error, setError] = useState('');
+  const [isPublished, setIsPublished] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   // Calculate credit cost based on word count
   const creditCost = useMemo(() => {
@@ -106,6 +109,8 @@ export function BlogPostGenerator({
       }
 
       setGeneratedContent(data.content);
+      setContentId(data.contentId); // Store content ID for publishing later
+      setIsPublished(false); // Reset published state
       setError('');
     } catch (error) {
       console.error('Failed to generate blog post:', error);
@@ -128,6 +133,39 @@ export function BlogPostGenerator({
     a.download = `${keyword.replace(/\s+/g, '-').toLowerCase()}-blog-post.md`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleMarkPublished = async (publishedUrl?: string) => {
+    if (!contentId) return;
+
+    setPublishing(true);
+
+    try {
+      const response = await fetch('/api/ai/content/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentId,
+          clientId,
+          usageLocation: publishedUrl ? 'published' : 'manual_copy',
+          publishedUrl,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Failed to mark as published:', data.error);
+        return;
+      }
+
+      setIsPublished(true);
+      // TODO: Show success toast
+    } catch (error) {
+      console.error('Failed to mark content as published:', error);
+    } finally {
+      setPublishing(false);
+    }
   };
 
   return (
@@ -382,6 +420,42 @@ export function BlogPostGenerator({
                     Save to Drive
                   </Button>
                 </div>
+
+                {/* Attribution Tracking */}
+                {!isPublished && contentId && (
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-3 space-y-2">
+                    <p className="text-sm font-medium text-green-900">Track Your Results</p>
+                    <p className="text-xs text-green-700">
+                      Mark this content as published to track its SEO impact and see how it drives traffic and conversions
+                    </p>
+                    <Button
+                      onClick={() => handleMarkPublished()}
+                      variant="outline"
+                      size="sm"
+                      className="w-full bg-white"
+                      disabled={publishing}
+                    >
+                      {publishing ? (
+                        <>
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          Tracking...
+                        </>
+                      ) : (
+                        'Mark as Published for Attribution Tracking'
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+                {isPublished && (
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                    <p className="text-sm font-medium text-blue-900">✓ Tracked</p>
+                    <p className="text-xs text-blue-700">
+                      This content is being tracked. View attribution results in your dashboard.
+                    </p>
+                  </div>
+                )}
+
                 <Button onClick={handleGenerate} variant="outline" className="w-full" size="sm">
                   <Sparkles className="mr-2 h-4 w-4" />
                   Regenerate
