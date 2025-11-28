@@ -249,7 +249,7 @@ export function ScanDashboard({ client, latestScan, issues, todos }: ScanDashboa
       )}
 
       {/* Todo List */}
-      <TodoList todos={todos} onRefresh={() => router.refresh()} />
+      <TodoList todos={todos} clientId={client.id} onRefresh={() => router.refresh()} />
 
       {/* Issues List */}
       {issues.length > 0 && (

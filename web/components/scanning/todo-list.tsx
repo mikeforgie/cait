@@ -15,6 +15,7 @@ import {
   Clock,
   CheckCheck,
 } from 'lucide-react';
+import { AITodoAssistant } from '@/components/ai-assistants/ai-todo-assistant';
 
 interface Todo {
   id: string;
@@ -30,15 +31,29 @@ interface Todo {
   completed_items?: number;
   created_at: string;
   completed_at?: string;
+  metadata?: any;
 }
 
 interface TodoListProps {
   todos: Todo[];
+  clientId: string;
   onRefresh?: () => void;
 }
 
-export function TodoList({ todos, onRefresh }: TodoListProps) {
+export function TodoList({ todos, clientId, onRefresh }: TodoListProps) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+
+  // Helper to check if todo supports AI assistance
+  const supportsAIAssistance = (todoType: string) => {
+    return ['add_meta_descriptions', 'add_alt_text', 'add_h1_tags'].includes(todoType);
+  };
+
+  // Helper to get URLs from todo metadata
+  const getIssueUrls = (todo: Todo): string[] => {
+    // In real implementation, these URLs would come from the scan results
+    // For now, return empty array - will be populated by detailed scanner
+    return todo.metadata?.issue_urls || [];
+  };
 
   const filteredTodos = todos.filter(todo => {
     if (filter === 'all') return true;
@@ -249,6 +264,18 @@ export function TodoList({ todos, onRefresh }: TodoListProps) {
                       </span>
                     )}
                   </div>
+
+                  {/* AI Assistant Button */}
+                  {todo.status === 'pending' && supportsAIAssistance(todo.todo_type) && (
+                    <div className="mt-3">
+                      <AITodoAssistant
+                        todoId={todo.id}
+                        todoType={todo.todo_type}
+                        clientId={clientId}
+                        issueUrls={getIssueUrls(todo)}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
