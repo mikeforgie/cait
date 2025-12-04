@@ -28,6 +28,7 @@ interface Platform {
 }
 
 interface ConnectionsSummaryCardProps {
+  clientId: string
   platforms?: Platform[]
   onConnectionComplete?: () => void
 }
@@ -39,6 +40,7 @@ const DEFAULT_PLATFORMS: Platform[] = [
 ]
 
 export function ConnectionsSummaryCard({
+  clientId,
   platforms = DEFAULT_PLATFORMS,
   onConnectionComplete,
 }: ConnectionsSummaryCardProps) {
@@ -103,7 +105,7 @@ export function ConnectionsSummaryCard({
 
             {/* Manage Link */}
             <Link
-              href="/dashboard/connections"
+              href={`/dashboard/clients/${clientId}/connections`}
               className="flex items-center justify-between w-full mt-4 pt-4 border-t border-gray-200 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors group"
             >
               <span>Manage Connections</span>

@@ -1,12 +1,14 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PlatformCard } from '@/components/connections/PlatformCard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AIGuideModal } from '@/components/ai/ai-guide-modal'
 import { getGuide } from '@/lib/ai/guides/guide-library'
+import { WordPressConnectionModal } from '@/components/connections/WordPressConnectionModal'
+import { HostingConnectionModal } from '@/components/connections/HostingConnectionModal'
 import {
   Search,
   TrendingUp,
@@ -14,7 +16,9 @@ import {
   Sparkles,
   Brain,
   Plus,
-  BarChart3
+  BarChart3,
+  Globe,
+  Server
 } from 'lucide-react'
 
 interface Platform {
@@ -25,6 +29,7 @@ interface Platform {
   lastSync?: string
   guideId?: string  // Links to AI guide
   oauthType?: 'google' | 'bing' | 'clarity'  // For OAuth-based connections
+  connectionType?: 'wordpress' | 'hosting'  // For site deployment connections
 }
 
 export default function ClientConnectionsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,6 +38,10 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
   const [client, setClient] = useState<any>(null)
   const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null)
   const [isGuideOpen, setIsGuideOpen] = useState(false)
+  const [isWordPressModalOpen, setIsWordPressModalOpen] = useState(false)
+  const [isHostingModalOpen, setIsHostingModalOpen] = useState(false)
+  const [wordpressConnection, setWordpressConnection] = useState<any>(null)
+  const [hostingConnection, setHostingConnection] = useState<any>(null)
   const supabase = createClient()
 
   const selectedGuide = selectedGuideId ? getGuide(selectedGuideId) : null
@@ -47,32 +56,93 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
     setSelectedGuideId(null)
   }
 
+  // Fetch all connections
+  const fetchConnections = useCallback(async () => {
+    // Fetch client
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', id)
+      .single()
+    setClient(clientData)
+
+    // Fetch bing/clarity integrations
+    const { data } = await supabase
+      .from('bing_clarity_integrations')
+      .select('*')
+      .eq('client_id', id)
+      .maybeSingle()
+    setIntegrations(data)
+
+    // Fetch WordPress connection
+    try {
+      const wpResponse = await fetch(`/api/connections/wordpress?clientId=${id}`)
+      const wpData = await wpResponse.json()
+      setWordpressConnection(wpData.connection)
+    } catch (e) {
+      console.log('WordPress connection fetch error:', e)
+    }
+
+    // Fetch hosting connection
+    try {
+      const hostingResponse = await fetch(`/api/connections/hosting?clientId=${id}`)
+      const hostingData = await hostingResponse.json()
+      setHostingConnection(hostingData.connection)
+    } catch (e) {
+      console.log('Hosting connection fetch error:', e)
+    }
+  }, [id, supabase])
+
   // Fetch client and integration status from database
   useEffect(() => {
-    async function fetchData() {
-      // Fetch client
-      const { data: clientData } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', id)
-        .single()
-      setClient(clientData)
-
-      // Fetch integrations for this client
-      const { data } = await supabase
-        .from('bing_clarity_integrations')
-        .select('*')
-        .eq('client_id', id)
-        .maybeSingle()
-      setIntegrations(data)
-    }
-    fetchData()
-  }, [id, supabase])
+    fetchConnections()
+  }, [fetchConnections])
 
   // Handle OAuth connection
   const handleOAuthConnect = (oauthType: string) => {
     // Redirect to OAuth authorization endpoint
     window.location.href = `/api/auth/google/authorize?clientId=${id}`
+  }
+
+  // Handle WordPress connection
+  const handleWordPressConnect = async (data: { siteUrl: string; username: string; appPassword: string }) => {
+    const response = await fetch('/api/connections/wordpress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: id,
+        ...data,
+      }),
+    })
+    const result = await response.json()
+    if (result.success) {
+      fetchConnections() // Refresh connections
+    }
+    return result
+  }
+
+  // Handle Hosting connection
+  const handleHostingConnect = async (data: {
+    connectionType: string;
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    rootPath: string;
+  }) => {
+    const response = await fetch('/api/connections/hosting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: id,
+        ...data,
+      }),
+    })
+    const result = await response.json()
+    if (result.success) {
+      fetchConnections() // Refresh connections
+    }
+    return result
   }
 
   // Define platform configurations with AI guides
@@ -94,6 +164,22 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
       lastSync: client?.ga4_last_sync,
       guideId: 'connect-ga4',
       oauthType: 'google'
+    },
+    {
+      name: 'WordPress Site',
+      description: 'Enable AI to deploy robots.txt, sitemaps, and SEO files directly to your WordPress site.',
+      icon: Globe,
+      status: wordpressConnection?.status === 'connected' ? 'connected' : 'disconnected',
+      lastSync: wordpressConnection?.last_verified_at,
+      connectionType: 'wordpress'
+    },
+    {
+      name: 'Hosting (FTP/SFTP)',
+      description: 'Connect via FTP or SFTP for direct file deployment to any hosting provider.',
+      icon: Server,
+      status: hostingConnection?.status === 'connected' ? 'connected' : (hostingConnection ? 'pending' : 'disconnected'),
+      lastSync: hostingConnection?.last_verified_at,
+      connectionType: 'hosting'
     },
     {
       name: 'Bing Webmaster Tools',
@@ -178,6 +264,10 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
               // If platform has OAuth, use OAuth flow
               if (platform.oauthType === 'google') {
                 handleOAuthConnect('google')
+              } else if (platform.connectionType === 'wordpress') {
+                setIsWordPressModalOpen(true)
+              } else if (platform.connectionType === 'hosting') {
+                setIsHostingModalOpen(true)
               } else if (platform.guideId) {
                 // For non-OAuth platforms, show guide
                 handleOpenGuide(platform.guideId)
@@ -186,8 +276,14 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
               }
             }}
             onConfigure={() => {
-              // TODO: Implement configuration
-              console.log(`Configure ${platform.name} for client ${id}`)
+              // Open config modal for connected platforms
+              if (platform.connectionType === 'wordpress') {
+                setIsWordPressModalOpen(true)
+              } else if (platform.connectionType === 'hosting') {
+                setIsHostingModalOpen(true)
+              } else {
+                console.log(`Configure ${platform.name} for client ${id}`)
+              }
             }}
           />
         ))}
@@ -248,6 +344,22 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
           onComplete={handleCloseGuide}
         />
       )}
+
+      {/* WordPress Connection Modal */}
+      <WordPressConnectionModal
+        isOpen={isWordPressModalOpen}
+        onClose={() => setIsWordPressModalOpen(false)}
+        onConnect={handleWordPressConnect}
+        clientDomain={client?.domain}
+      />
+
+      {/* Hosting Connection Modal */}
+      <HostingConnectionModal
+        isOpen={isHostingModalOpen}
+        onClose={() => setIsHostingModalOpen(false)}
+        onConnect={handleHostingConnect}
+        clientDomain={client?.domain}
+      />
     </div>
   )
 }

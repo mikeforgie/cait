@@ -33,11 +33,26 @@ export default async function ClientDetailPage({
     backlinks: 60
   }
 
-  // Connections with AI guide support
+  // Connections with AI guide support - derive status from actual client data
   const connections = [
-    { id: 'gsc', name: 'Google Search Console', status: 'danger' as const, guideId: 'connect-gsc' },
-    { id: 'ga4', name: 'Google Analytics 4', status: 'danger' as const, guideId: 'connect-ga4' },
-    { id: 'anthropic', name: 'Anthropic API', status: 'danger' as const, guideId: 'add-anthropic-key' },
+    {
+      id: 'gsc',
+      name: 'Google Search Console',
+      status: (client.selected_gsc_site_url ? 'success' : 'danger') as const,
+      guideId: 'connect-gsc'
+    },
+    {
+      id: 'ga4',
+      name: 'Google Analytics 4',
+      status: (client.selected_ga4_property_id ? 'success' : 'danger') as const,
+      guideId: 'connect-ga4'
+    },
+    {
+      id: 'anthropic',
+      name: 'Anthropic API',
+      status: 'danger' as const,
+      guideId: 'add-anthropic-key'
+    },
   ]
 
   return (
@@ -95,7 +110,7 @@ export default async function ClientDetailPage({
         </Card>
 
         {/* Connections Card with AI Guide */}
-        <ConnectionsSummaryCard platforms={connections} />
+        <ConnectionsSummaryCard clientId={id} platforms={connections} />
 
         {/* Active Tasks Card */}
         <Card className="shadow-sm">

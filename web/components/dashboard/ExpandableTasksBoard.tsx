@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ChevronDown, ChevronRight, GripVertical, Plus, Trash2, Bot } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TaskDetailModal, TaskDetail } from './TaskDetailModal';
+import { AutomationResultModal, AutomationResult } from './AutomationResultModal';
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-  status: 'todo' | 'in_progress' | 'done';
+interface Task extends TaskDetail {
   dueDate?: string;
 }
 
@@ -28,12 +26,19 @@ interface TaskCategory {
 }
 
 export const ExpandableTasksBoard = () => {
+  const params = useParams();
+  const clientId = params?.id as string;
+
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['onsite']));
   const [draggedTask, setDraggedTask] = useState<{
     categoryId: string;
     columnId: string;
     taskId: string;
   } | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [automationResult, setAutomationResult] = useState<AutomationResult | null>(null);
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
 
   const [categories, setCategories] = useState<TaskCategory[]>([
     {
@@ -52,6 +57,21 @@ export const ExpandableTasksBoard = () => {
               description: 'Security & Setup - Critical for trust and rankings',
               priority: 'high',
               status: 'todo',
+              whyItMatters: 'SSL certificates encrypt data between your website and visitors. Google has confirmed HTTPS is a ranking factor, and browsers show "Not Secure" warnings for non-HTTPS sites, which damages trust and conversions.',
+              instructions: [
+                'Check if your hosting provider offers free SSL (most do via Let\'s Encrypt)',
+                'Enable SSL in your hosting control panel or request it from support',
+                'Update your WordPress/CMS settings to use HTTPS URLs',
+                'Set up 301 redirects from HTTP to HTTPS',
+                'Update internal links and resources to use HTTPS',
+                'Submit the HTTPS version to Google Search Console'
+              ],
+              estimatedTime: '30 minutes - 2 hours',
+              automatable: false,
+              resources: [
+                { label: 'Google\'s HTTPS Guide', url: 'https://developers.google.com/search/docs/crawling-indexing/https' },
+                { label: 'Let\'s Encrypt - Free SSL', url: 'https://letsencrypt.org/' }
+              ]
             },
             {
               id: 'os-2',
@@ -59,6 +79,20 @@ export const ExpandableTasksBoard = () => {
               description: 'Sitemaps & Indexation - Control crawler access',
               priority: 'high',
               status: 'todo',
+              whyItMatters: 'The robots.txt file tells search engines which pages to crawl and which to ignore. A missing or misconfigured robots.txt can lead to wasted crawl budget or accidentally blocking important pages.',
+              instructions: [
+                'Check if robots.txt exists at yourdomain.com/robots.txt',
+                'Ensure important pages are not blocked (Disallow)',
+                'Add your sitemap URL to robots.txt',
+                'Block admin, login, and duplicate content pages',
+                'Test in Google Search Console\'s robots.txt tester'
+              ],
+              estimatedTime: '15-30 minutes',
+              automatable: true,
+              automationDescription: 'AI can analyze your site, create an optimized robots.txt file, and submit it to Google Search Console.',
+              resources: [
+                { label: 'Google robots.txt Guide', url: 'https://developers.google.com/search/docs/crawling-indexing/robots/intro' }
+              ]
             },
             {
               id: 'os-3',
@@ -170,6 +204,20 @@ export const ExpandableTasksBoard = () => {
               description: 'Sitemaps & Indexation - Help search engines crawl',
               priority: 'high',
               status: 'in_progress',
+              whyItMatters: 'An XML sitemap helps search engines discover and index all your important pages. Without one, search engines may miss pages, especially newer or deeply nested content.',
+              instructions: [
+                'Generate a sitemap using your CMS (WordPress has plugins like Yoast/RankMath)',
+                'Ensure the sitemap only includes indexable, canonical pages',
+                'Verify sitemap is accessible at yourdomain.com/sitemap.xml',
+                'Submit the sitemap to Google Search Console',
+                'Submit the sitemap to Bing Webmaster Tools'
+              ],
+              estimatedTime: '15-30 minutes',
+              automatable: true,
+              automationDescription: 'AI can generate your sitemap, verify it\'s valid, and submit it to Google Search Console and Bing Webmaster Tools automatically.',
+              resources: [
+                { label: 'Google Sitemap Guide', url: 'https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview' }
+              ]
             },
             {
               id: 'os-18',
@@ -575,6 +623,95 @@ export const ExpandableTasksBoard = () => {
     );
   };
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTask(null);
+  };
+
+  const handleMarkComplete = (taskId: string) => {
+    setCategories(
+      categories.map((cat) => ({
+        ...cat,
+        columns: cat.columns.map((col) => {
+          const taskIndex = col.tasks.findIndex((t) => t.id === taskId);
+          if (taskIndex === -1) return col;
+
+          const task = col.tasks[taskIndex];
+          // Remove from current column
+          const updatedTasks = col.tasks.filter((t) => t.id !== taskId);
+
+          // If this is the done column, keep it here
+          if (col.id === 'done') {
+            return { ...col, tasks: updatedTasks };
+          }
+
+          return { ...col, tasks: updatedTasks };
+        }),
+      })).map((cat) => ({
+        ...cat,
+        columns: cat.columns.map((col) => {
+          if (col.id !== 'done') return col;
+
+          // Find the task from any column and add to done
+          const allTasks = categories.flatMap((c) => c.columns.flatMap((column) => column.tasks));
+          const task = allTasks.find((t) => t.id === taskId);
+          if (!task) return col;
+
+          // Check if already in done
+          if (col.tasks.some((t) => t.id === taskId)) return col;
+
+          return {
+            ...col,
+            tasks: [...col.tasks, { ...task, status: 'done' as const }],
+          };
+        }),
+      }))
+    );
+    handleCloseModal();
+  };
+
+  const handleRunAutomation = async (taskId: string) => {
+    if (!clientId) {
+      alert('Client ID not found. Please navigate to a client first.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/automation/run-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          taskId,
+          taskType: taskId,
+        }),
+      });
+
+      const result = await response.json();
+
+      // Close the task modal and show results
+      handleCloseModal();
+      setAutomationResult(result);
+      setIsResultModalOpen(true);
+
+    } catch (error) {
+      console.error('Automation error:', error);
+      setAutomationResult({
+        success: false,
+        taskId,
+        action: 'error',
+        message: 'Failed to run automation',
+        error: error instanceof Error ? error.message : 'Network error',
+      });
+      setIsResultModalOpen(true);
+    }
+  };
+
   const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
     switch (priority) {
       case 'high':
@@ -645,7 +782,7 @@ export const ExpandableTasksBoard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold gradient-text">To Dos</h2>
+        <h2 className="text-3xl font-bold gradient-text">Tasks</h2>
         <p className="text-gray-600 mt-1">Manage your SEO tasks by category and status</p>
       </div>
 
@@ -717,36 +854,50 @@ export const ExpandableTasksBoard = () => {
                                   key={task.id}
                                   draggable
                                   onDragStart={() => handleDragStart(category.id, column.id, task.id)}
-                                  className={`p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${getPriorityColor(
+                                  onClick={() => handleTaskClick(task)}
+                                  className={`p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer ${getPriorityColor(
                                     task.priority
                                   )}`}
                                 >
                                   <div className="flex items-start justify-between gap-2 mb-2">
-                                    <GripVertical className="w-3 h-3 text-gray-400 flex-shrink-0 mt-0.5" />
-                                    <button
-                                      onClick={() => deleteTask(category.id, column.id, task.id)}
-                                      className="p-1 hover:bg-red-50 rounded transition-colors"
-                                      title="Delete task"
-                                    >
-                                      <Trash2 className="w-3 h-3 text-red-500 hover:text-red-700" />
-                                    </button>
+                                    <GripVertical className="w-3 h-3 text-gray-400 flex-shrink-0 mt-0.5 cursor-grab" />
+                                    <div className="flex items-center gap-1">
+                                      {task.automatable && (
+                                        <span className="p-1 bg-purple-50 rounded" title="AI can automate this">
+                                          <Bot className="w-3 h-3 text-purple-500" />
+                                        </span>
+                                      )}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteTask(category.id, column.id, task.id);
+                                        }}
+                                        className="p-1 hover:bg-red-50 rounded transition-colors"
+                                        title="Delete task"
+                                      >
+                                        <Trash2 className="w-3 h-3 text-red-500 hover:text-red-700" />
+                                      </button>
+                                    </div>
                                   </div>
 
                                   <h5 className="font-semibold text-gray-900 text-sm mb-1">{task.title}</h5>
                                   <p className="text-xs text-gray-600 mb-2">{task.description}</p>
 
                                   {/* Priority Badge */}
-                                  <span
-                                    className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
-                                      task.priority === 'high'
-                                        ? 'bg-red-100 text-red-700'
-                                        : task.priority === 'medium'
-                                          ? 'bg-yellow-100 text-yellow-700'
-                                          : 'bg-green-100 text-green-700'
-                                    }`}
-                                  >
-                                    {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
+                                        task.priority === 'high'
+                                          ? 'bg-red-100 text-red-700'
+                                          : task.priority === 'medium'
+                                            ? 'bg-yellow-100 text-yellow-700'
+                                            : 'bg-green-100 text-green-700'
+                                      }`}
+                                    >
+                                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                                    </span>
+                                    <span className="text-xs text-blue-600 hover:underline">Click for details →</span>
+                                  </div>
                                 </div>
                               ))
                             )}
@@ -769,6 +920,25 @@ export const ExpandableTasksBoard = () => {
           );
         })}
       </div>
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onMarkComplete={handleMarkComplete}
+        onRunAutomation={handleRunAutomation}
+      />
+
+      {/* Automation Result Modal */}
+      <AutomationResultModal
+        result={automationResult}
+        isOpen={isResultModalOpen}
+        onClose={() => {
+          setIsResultModalOpen(false);
+          setAutomationResult(null);
+        }}
+      />
     </div>
   );
 };
