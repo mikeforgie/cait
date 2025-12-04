@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/sync/scheduled?type=ga4",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/sync/scheduled?type=conversions",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/sync/scheduled?type=attribution",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}
