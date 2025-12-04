@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Get client website
+    // Get client domain
     const { data: client } = await supabase
       .from('clients')
-      .select('website')
+      .select('domain')
       .eq('id', clientId)
       .single();
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     // Check rankings using DataForSEO
     const keywordChecks = trackedKeywords.map((kw) => ({
       keyword: kw.keyword,
-      targetDomain: client.website,
+      targetDomain: client.domain,
     }));
 
     const rankingResults = await batchCheckRankings(keywordChecks, credentials, {

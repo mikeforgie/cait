@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Heart, Plug, ListTodo, TrendingUp, CheckCircle, AlertTriangle, XCircle } from 'lucide-react'
+import { Heart, ListTodo, TrendingUp, CheckCircle, AlertTriangle, XCircle, Sparkles, FileText, Mail } from 'lucide-react'
+import { ConnectionsSummaryCard } from '@/components/dashboard/ConnectionsSummaryCard'
 
 export default async function ClientDetailPage({
   params,
@@ -32,15 +33,12 @@ export default async function ClientDetailPage({
     backlinks: 60
   }
 
-  // Mock connections data
+  // Connections with AI guide support
   const connections = [
-    { name: 'Google Search Console', status: 'connected' },
-    { name: 'OpenAI API', status: 'connected' },
-    { name: 'Bing Webmaster', status: 'pending' },
-    { name: 'Perplexity', status: 'disconnected' },
+    { id: 'gsc', name: 'Google Search Console', status: 'danger' as const, guideId: 'connect-gsc' },
+    { id: 'ga4', name: 'Google Analytics 4', status: 'danger' as const, guideId: 'connect-ga4' },
+    { id: 'anthropic', name: 'Anthropic API', status: 'danger' as const, guideId: 'add-anthropic-key' },
   ]
-
-  const connectedCount = connections.filter(c => c.status === 'connected').length
 
   return (
     <div className="p-8 space-y-6">
@@ -96,44 +94,8 @@ export default async function ClientDetailPage({
           </CardContent>
         </Card>
 
-        {/* Connections Card */}
-        <Card className="shadow-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Plug className="w-5 h-5 text-red-500" />
-                <CardTitle className="text-lg font-semibold">Connections</CardTitle>
-              </div>
-              <Link href={`/dashboard/clients/${id}/connections`}>
-                <span className="text-sm font-medium text-red-500 hover:text-red-600 cursor-pointer">
-                  Manage →
-                </span>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Connections list */}
-            <div className="space-y-3">
-              {connections.map((connection, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    connection.status === 'connected' ? 'bg-green-500' :
-                    connection.status === 'pending' ? 'bg-yellow-500' :
-                    'bg-red-500'
-                  }`} />
-                  <span className="text-sm text-gray-700">{connection.name}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Summary */}
-            <div className="pt-4 border-t border-gray-100 text-center">
-              <p className="text-sm text-gray-600">
-                {connectedCount} of {connections.length} platforms connected
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Connections Card with AI Guide */}
+        <ConnectionsSummaryCard platforms={connections} />
 
         {/* Active Tasks Card */}
         <Card className="shadow-sm">
@@ -168,6 +130,43 @@ export default async function ClientDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Content Studio Card - Full Width */}
+      <Card className="shadow-sm border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <CardTitle className="text-lg font-semibold">AI Content Studio</CardTitle>
+              <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">NEW</Badge>
+            </div>
+            <Link href={`/dashboard/clients/${id}/content`}>
+              <span className="text-sm font-medium text-purple-600 hover:text-purple-700 cursor-pointer">
+                Open Studio →
+              </span>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 mb-4">
+            Generate SEO-optimized content powered by AI. Create blog posts, outreach emails, and more.
+          </p>
+          <div className="flex gap-3">
+            <Link href={`/dashboard/clients/${id}/content`}>
+              <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Create Blog Post
+              </button>
+            </Link>
+            <Link href={`/dashboard/clients/${id}/content`}>
+              <button className="px-4 py-2 rounded-lg text-sm font-medium text-purple-700 bg-purple-100 hover:bg-purple-200 transition-all flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Write Outreach Email
+              </button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

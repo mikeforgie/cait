@@ -59,7 +59,7 @@ export function ScanDashboard({ client, latestScan, issues, todos }: ScanDashboa
         <div>
           <h1 className="text-3xl font-bold text-neutral-900">SEO Scanning & Auto-Tasks</h1>
           <p className="text-neutral-600 mt-1">
-            Automatically detect and complete SEO tasks for {client.website}
+            Automatically detect and complete SEO tasks for {client.domain}
           </p>
         </div>
         <Button
@@ -76,7 +76,7 @@ export function ScanDashboard({ client, latestScan, issues, todos }: ScanDashboa
       {scanning && (
         <ScanProgress
           clientId={client.id}
-          websiteUrl={client.website}
+          websiteUrl={client.domain?.startsWith('http') ? client.domain : `https://${client.domain}`}
           onComplete={handleScanComplete}
           autoStart={true}
         />

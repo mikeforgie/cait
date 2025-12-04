@@ -8,6 +8,9 @@ import { ArrowLeft, TrendingUp, TrendingDown, Activity, Link as LinkIcon, FileTe
 import { ActionLogger } from '@/components/attribution/action-logger';
 import { AttributionTimeline } from '@/components/attribution/attribution-timeline';
 import { PageAttributionView } from '@/components/attribution/page-attribution-view';
+import { SyncControls } from '@/components/attribution/sync-controls';
+import { AITrafficWidget } from '@/components/attribution/ai-traffic-widget';
+import { ConversionsDashboard } from '@/components/attribution/conversions-dashboard';
 import { getClientActions, getActionStats } from '@/lib/attribution/action-logger';
 
 export default async function AttributionPage({
@@ -90,6 +93,15 @@ export default async function AttributionPage({
           </Link>
         </Button>
       </div>
+
+      {/* Sync Controls */}
+      <SyncControls clientId={clientId} />
+
+      {/* AI Traffic Widget */}
+      <AITrafficWidget clientId={clientId} />
+
+      {/* Conversions Dashboard */}
+      <ConversionsDashboard clientId={clientId} />
 
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -217,7 +229,7 @@ export default async function AttributionPage({
       {/* Action Logger */}
       <ActionLogger
         clientId={clientId}
-        clientWebsite={client.website}
+        clientWebsite={client.domain}
       />
 
       {/* Attribution Timeline */}

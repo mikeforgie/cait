@@ -24,11 +24,15 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Verify client exists
-    const { data: client } = await supabase
+    const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id, website')
+      .select('id, domain')
       .eq('id', clientId)
       .single();
+
+    if (clientError) {
+      console.error('Client lookup error:', clientError);
+    }
 
     if (!client) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 });

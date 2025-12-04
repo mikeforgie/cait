@@ -31,14 +31,14 @@ export function AITrafficWidget({ clientId }: AITrafficWidgetProps) {
 
   const getPlatformIcon = (platform: string) => {
     const icons: Record<string, string> = {
-      chatgpt: '>',
-      perplexity: '=.',
-      claude: '<¯',
-      gemini: '=Ž',
-      searchgpt: '=',
-      you_com: '<',
+      chatgpt: 'GPT',
+      perplexity: 'P',
+      claude: 'C',
+      gemini: 'G',
+      searchgpt: 'S',
+      you_com: 'Y',
     };
-    return icons[platform] || '>';
+    return icons[platform] || 'AI';
   };
 
   const getPlatformName = (platform: string) => {
@@ -104,7 +104,9 @@ export function AITrafficWidget({ clientId }: AITrafficWidgetProps) {
           {aiTraffic.map((item, idx) => (
             <div key={idx} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg">{getPlatformIcon(item.platform)}</span>
+                <span className="text-xs font-bold bg-neutral-100 rounded px-1.5 py-0.5">
+                  {getPlatformIcon(item.platform)}
+                </span>
                 <span className="text-sm font-medium">{getPlatformName(item.platform)}</span>
               </div>
               <div className="flex items-center gap-2">

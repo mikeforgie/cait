@@ -77,9 +77,9 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${gscSites.length} GSC sites`)
     console.log(`Found ${gbpLocations.length} GBP locations`)
 
-    // Redirect back to client page with success
+    // Redirect to property selection page so user can choose which properties to track
     return NextResponse.redirect(
-      new URL(`/dashboard/clients/${clientId}?success=google_connected`, request.url)
+      new URL(`/dashboard/clients/${clientId}/connections/select-properties`, request.url)
     )
   } catch (error: any) {
     console.error('OAuth callback error:', error)

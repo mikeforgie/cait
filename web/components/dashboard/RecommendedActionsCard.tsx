@@ -96,13 +96,14 @@ export function RecommendedActionsCard({
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <GradientButton
+                  <Button
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                     onClick={() => onGenerateClick?.(index)}
                   >
+                    <Sparkles className="w-4 h-4 mr-1" />
                     Generate with AI
-                  </GradientButton>
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

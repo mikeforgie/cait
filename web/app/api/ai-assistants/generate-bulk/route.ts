@@ -165,10 +165,10 @@ export async function POST(request: NextRequest) {
           creditsUsed = suggestions.length * 1;
         } else if (type === 'alt_text') {
           // Collect all images from pages
-          const allImages = pageData.flatMap((page) =>
+          const allImages = pageData.flatMap((page: any) =>
             page.images
-              .filter((img) => !img.alt || img.alt.trim() === '')
-              .map((img) => ({ ...img, page_url: page.url }))
+              .filter((img: any) => !img.alt || img.alt.trim() === '')
+              .map((img: any) => ({ ...img, page_url: page.url }))
           );
 
           suggestions = await generateAltText(allImages, businessContext, {

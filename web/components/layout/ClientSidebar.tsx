@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, LayoutGrid, Link2, ListTodo, BarChart3, Settings, HelpCircle } from 'lucide-react'
+import { Home, LayoutGrid, Link2, ListTodo, TrendingUp, BarChart3, Settings, HelpCircle, Target, Sparkles, Scan } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ClientSidebarProps {
@@ -13,6 +13,10 @@ const clientNavigation = [
   { name: 'Client Dashboard', href: '', icon: LayoutGrid },
   { name: 'Connections', href: '/connections', icon: Link2 },
   { name: 'To Dos', href: '/todos', icon: ListTodo },
+  { name: 'SEO Scanning', href: '/scanning', icon: Scan },
+  { name: 'Rankings', href: '/rankings', icon: TrendingUp },
+  { name: 'Attribution', href: '/attribution', icon: Target },
+  { name: 'Content Studio', href: '/content', icon: Sparkles },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Help', href: '/help', icon: HelpCircle },

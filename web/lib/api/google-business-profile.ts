@@ -93,7 +93,8 @@ export async function fetchGBPMetrics(
     })
 
     // Parse metrics from response
-    const metrics = response.data?.locationMetrics?.[0]?.metricValues || []
+    const responseData = response.data as { locationMetrics?: Array<{ metricValues?: any[] }> }
+    const metrics = responseData?.locationMetrics?.[0]?.metricValues || []
 
     const getMetricValue = (metricName: string): number => {
       const metric = metrics.find((m: any) => m.metric === metricName)
@@ -169,7 +170,7 @@ export async function fetchGBPReviews(
       method: 'GET'
     })
 
-    return response.data?.reviews || []
+    return (response.data as { reviews?: any[] })?.reviews || []
   } catch (error: any) {
     console.error('Error fetching GBP reviews:', error.message)
     return []

@@ -72,7 +72,7 @@ export function PageAttributionView({ clientId, targetUrl }: PageAttributionView
                   {action.action_type.replace(/_/g, ' ')}
                 </p>
                 <p className="text-xs text-neutral-600 mt-1">
-                  {new Date(action.executed_at).toLocaleDateString()} · {action.action_category}
+                  {new Date(action.executed_at).toLocaleDateString()} Â· {action.action_category}
                 </p>
                 {action.action_details?.backlinkUrl && (
                   <p className="text-xs text-neutral-500 mt-1">

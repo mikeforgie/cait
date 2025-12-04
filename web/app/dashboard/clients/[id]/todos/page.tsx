@@ -1,9 +1,9 @@
-import { KanbanBoard } from '@/components/dashboard/KanbanBoard';
+import { ExpandableTasksBoard } from '@/components/dashboard/ExpandableTasksBoard';
 
 export default function TodosPage() {
   return (
-    <div className="w-full">
-      <KanbanBoard />
+    <div className="space-y-6">
+      <ExpandableTasksBoard />
     </div>
   );
 }

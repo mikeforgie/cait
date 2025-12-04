@@ -84,7 +84,8 @@ export function ScanProgress({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to start scan');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to start scan (${response.status})`);
       }
 
       // Read streaming response
