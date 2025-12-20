@@ -157,7 +157,7 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
     apiKey: string;
     siteUrl: string;
   }) => {
-    const response = await fetch('/api/auth/bing/save-key', {
+    const response = await fetch('/api/connections/bing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -177,7 +177,7 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
     apiToken: string;
     projectId: string;
   }) => {
-    const response = await fetch('/api/auth/clarity/save-token', {
+    const response = await fetch('/api/connections/clarity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
