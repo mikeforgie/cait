@@ -253,10 +253,10 @@ async function detectTechnicalAudit(clientId: string, task: Task): Promise<Detec
   // Check for scan results
   const { data: scans } = await supabase
     .from('seo_scans')
-    .select('id, scan_type, status, created_at')
+    .select('id, scan_type, scan_status, created_at')
     .eq('client_id', clientId)
     .eq('scan_type', 'technical')
-    .eq('status', 'completed')
+    .eq('scan_status', 'completed')
     .order('created_at', { ascending: false })
     .limit(1)
 

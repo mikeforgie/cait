@@ -362,15 +362,15 @@ export async function storeScanResults(
         await supabase.from('backlinks').upsert(
           results.backlinks.map((bl: any) => ({
             client_id: clientId,
-            url_from: bl.url_from,
-            url_to: bl.url_to,
-            anchor: bl.anchor,
-            domain_from: bl.domain_from,
-            domain_from_rank: bl.domain_from_rank,
-            first_seen: bl.first_seen,
+            source_url: bl.url_from || bl.source_url,
+            target_url: bl.url_to || bl.target_url,
+            anchor_text: bl.anchor || bl.anchor_text,
+            source_domain_rating: bl.domain_from_rank || bl.source_domain_rating,
+            domain_from_rank: bl.domain_from_rank, // Also store in new column
+            discovered_at: bl.first_seen || new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })),
-          { onConflict: 'client_id,url_from,url_to' }
+          { onConflict: 'client_id,source_url,target_url' }
         )
       }
       break
