@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Building2 } from 'lucide-react'
+import { SyncTasksButton } from '@/components/admin/SyncTasksButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -32,11 +33,14 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-gray-600 mt-1">Manage and monitor your SEO clients</p>
         </div>
-        <Link href="/dashboard/clients/new">
-          <button className="px-6 py-2.5 rounded-lg font-medium text-white bg-gradient-to-r from-orange-500 via-yellow-500 to-green-500 hover:opacity-90 transition-opacity flex items-center gap-2">
-            + Add Client
-          </button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <SyncTasksButton />
+          <Link href="/dashboard/clients/new">
+            <button className="px-6 py-2.5 rounded-lg font-medium text-white bg-gradient-to-r from-orange-500 via-yellow-500 to-green-500 hover:opacity-90 transition-opacity flex items-center gap-2">
+              + Add Client
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}

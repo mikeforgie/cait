@@ -1051,6 +1051,100 @@ export async function initializeClientTasks(clientId: string): Promise<void> {
 }
 
 /**
+ * Sync client tasks - add any missing tasks from templates
+ * This is safe to run multiple times as it only adds new tasks
+ */
+export async function syncClientTasks(clientId: string): Promise<{
+  added: number
+  existing: number
+  total: number
+}> {
+  const supabase = await createClient()
+
+  // Get existing tasks for this client
+  const { data: existingTasks, error: fetchError } = await supabase
+    .from('tasks')
+    .select('name, month')
+    .eq('client_id', clientId)
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch existing tasks: ${fetchError.message}`)
+  }
+
+  // Create a Set of existing task keys (name + month)
+  const existingTaskKeys = new Set(
+    (existingTasks || []).map(t => `${t.name}|${t.month}`)
+  )
+
+  // Filter templates to only include tasks that don't exist yet
+  const newTasks = TASK_TEMPLATES.filter(
+    template => !existingTaskKeys.has(`${template.name}|${template.month}`)
+  ).map(template => ({
+    client_id: clientId,
+    month: template.month,
+    name: template.name,
+    description: template.description,
+    category: template.category,
+    automated: template.automated,
+    automation_config: template.automation_config || null,
+    status: 'pending' as TaskStatus,
+  }))
+
+  if (newTasks.length > 0) {
+    const { error: insertError } = await supabase.from('tasks').insert(newTasks)
+
+    if (insertError) {
+      throw new Error(`Failed to insert new tasks: ${insertError.message}`)
+    }
+  }
+
+  return {
+    added: newTasks.length,
+    existing: existingTaskKeys.size,
+    total: existingTaskKeys.size + newTasks.length,
+  }
+}
+
+/**
+ * Sync tasks for all clients
+ */
+export async function syncAllClientsTasks(): Promise<{
+  clients: number
+  totalAdded: number
+  results: Array<{ clientId: string; clientName: string; added: number }>
+}> {
+  const supabase = await createClient()
+
+  // Get all clients
+  const { data: clients, error: fetchError } = await supabase
+    .from('clients')
+    .select('id, name')
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch clients: ${fetchError.message}`)
+  }
+
+  const results: Array<{ clientId: string; clientName: string; added: number }> = []
+  let totalAdded = 0
+
+  for (const client of clients || []) {
+    const syncResult = await syncClientTasks(client.id)
+    results.push({
+      clientId: client.id,
+      clientName: client.name,
+      added: syncResult.added,
+    })
+    totalAdded += syncResult.added
+  }
+
+  return {
+    clients: clients?.length || 0,
+    totalAdded,
+    results,
+  }
+}
+
+/**
  * Get tasks for specific month
  */
 export async function getMonthTasks(
