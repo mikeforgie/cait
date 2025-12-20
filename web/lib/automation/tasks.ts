@@ -25,7 +25,7 @@ export interface TaskTemplate {
 
 /**
  * Month 0-12 Task Templates
- * Based on CAIT plan PDF roadmap and original Notion export
+ * Based on CAIT plan PDF roadmap, original Notion export, and Site Setup Checklist
  */
 export const TASK_TEMPLATES: TaskTemplate[] = [
   // Month 0: Onboarding & Foundation (Setup & Strategy)
@@ -35,6 +35,28 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     description: 'Send interview questionnaire and collect business information, goals, target audience',
     category: 'analytics',
     automated: false, // Manual for now, AI later
+  },
+  {
+    month: 0,
+    name: 'SSL Certificate Verification',
+    description: 'Verify website has valid SSL certificate (https). Critical for security and SEO.',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'scanner',
+      endpoint: 'ssl_check',
+    },
+  },
+  {
+    month: 0,
+    name: 'Favicon Setup',
+    description: 'Ensure website has a proper favicon configured for branding',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'scanner',
+      endpoint: 'favicon_check',
+    },
   },
   {
     month: 0,
@@ -76,6 +98,38 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
   },
   {
     month: 0,
+    name: 'Submit Sitemap to Google Search Console',
+    description: 'Create XML sitemap and submit to GSC for indexing',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'gsc',
+      endpoint: 'submit_sitemap',
+    },
+  },
+  {
+    month: 0,
+    name: 'Request Indexing for Key Pages',
+    description: 'Request indexing for homepage and key pages via GSC URL Inspection',
+    category: 'technical_seo',
+    automated: false,
+  },
+  {
+    month: 0,
+    name: 'Bing Webmaster Tools Setup',
+    description: 'Set up Bing Webmaster Tools and submit sitemap for Bing search visibility',
+    category: 'analytics',
+    automated: false,
+  },
+  {
+    month: 0,
+    name: 'Microsoft Clarity Setup',
+    description: 'Set up Microsoft Clarity for heatmaps, session recordings, and user behavior insights',
+    category: 'analytics',
+    automated: false,
+  },
+  {
+    month: 0,
     name: 'Google Business Profile Optimization',
     description: 'Claim/verify GBP listing, optimize business info, add photos, set categories',
     category: 'local_seo',
@@ -102,6 +156,89 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     automation_config: {
       api: 'claude',
       endpoint: 'generate_strategy',
+    },
+  },
+  {
+    month: 0,
+    name: 'Create Topical Map',
+    description: 'Develop topical authority map showing content clusters and pillar pages',
+    category: 'content',
+    automated: false, // AI-assisted later
+  },
+  {
+    month: 0,
+    name: 'Brand Alerts Setup',
+    description: 'Set up Google Alerts for brand mentions and competitor monitoring',
+    category: 'analytics',
+    automated: false,
+  },
+  {
+    month: 0,
+    name: 'Social Media Links Integration',
+    description: 'Link social media profiles to website and add social sharing buttons',
+    category: 'technical_seo',
+    automated: false,
+  },
+  {
+    month: 0,
+    name: 'Privacy Policy Page',
+    description: 'Ensure website has compliant privacy policy page',
+    category: 'content',
+    automated: true,
+    automation_config: {
+      api: 'scanner',
+      endpoint: 'privacy_policy_check',
+    },
+  },
+  {
+    month: 0,
+    name: 'Terms of Service Page',
+    description: 'Ensure website has terms of service/conditions page if applicable',
+    category: 'content',
+    automated: true,
+    automation_config: {
+      api: 'scanner',
+      endpoint: 'terms_check',
+    },
+  },
+  {
+    month: 0,
+    name: 'About Page Optimization',
+    description: 'Optimize about page for E-E-A-T signals and brand credibility',
+    category: 'content',
+    automated: false,
+  },
+  {
+    month: 0,
+    name: 'URL Structure Audit',
+    description: 'Review and optimize URL slugs for SEO best practices',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'scanner',
+      endpoint: 'url_structure_check',
+    },
+  },
+  {
+    month: 0,
+    name: 'Mobile Responsiveness Check',
+    description: 'Verify all pages are fully responsive on tablet and mobile devices',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'dataforseo',
+      endpoint: 'mobile_friendly',
+    },
+  },
+  {
+    month: 0,
+    name: 'Page Speed Optimization Check',
+    description: 'Run PageSpeed Insights and identify Core Web Vitals issues',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'dataforseo',
+      endpoint: 'lighthouse',
     },
   },
 

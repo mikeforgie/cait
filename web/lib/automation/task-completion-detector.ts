@@ -47,6 +47,18 @@ const DETECTION_CRITERIA: Record<string, (clientId: string, task: Task) => Promi
   'Backlink Profile Discovery': detectBacklinkDiscovery,
   'Initial Strategy Document': detectStrategyDocument,
 
+  // Site Setup Checklist Items
+  'SSL Certificate Verification': detectSSLCertificate,
+  'Favicon Setup': detectFavicon,
+  'Submit Sitemap to Google Search Console': detectSitemapSubmission,
+  'Bing Webmaster Tools Setup': detectBingSetup,
+  'Microsoft Clarity Setup': detectClaritySetup,
+  'Privacy Policy Page': detectPrivacyPolicy,
+  'Terms of Service Page': detectTermsPage,
+  'URL Structure Audit': detectURLStructure,
+  'Mobile Responsiveness Check': detectMobileResponsive,
+  'Page Speed Optimization Check': detectPageSpeed,
+
   // Month 1: Technical Foundation
   'Technical SEO Audit': detectTechnicalAudit,
   'Local SEO Setup': detectLocalSEOSetup,
@@ -968,6 +980,399 @@ async function detectMonthlyReport(clientId: string, task: Task): Promise<Detect
     detected: false,
     confidence: 'low',
     evidence: ['No monthly report found for this period'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect SSL certificate setup
+ */
+async function detectSSLCertificate(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check scan results for SSL
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_ssl === true) {
+    evidence.push('SSL certificate verified')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['SSL status not verified yet'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect favicon setup
+ */
+async function detectFavicon(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check scan results for favicon
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_favicon === true) {
+    evidence.push('Favicon detected')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Favicon not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect sitemap submission to GSC
+ */
+async function detectSitemapSubmission(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check scan results for sitemap
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_sitemap === true) {
+    evidence.push('Sitemap detected on website')
+
+    // Check if GSC is connected
+    const { data: client } = await supabase
+      .from('clients')
+      .select('selected_gsc_site_url')
+      .eq('id', clientId)
+      .single()
+
+    if (client?.selected_gsc_site_url) {
+      evidence.push('GSC connected - sitemap likely submitted')
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Sitemap not detected or GSC not connected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect Bing Webmaster Tools setup
+ */
+async function detectBingSetup(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('bing_api_key, bing_site_url, bing_connected_at')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.bing_api_key && client?.bing_site_url) {
+    evidence.push(`Bing connected: ${client.bing_site_url}`)
+    if (client.bing_connected_at) {
+      evidence.push(`Connected on ${new Date(client.bing_connected_at).toLocaleDateString()}`)
+    }
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Bing Webmaster Tools not connected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect Microsoft Clarity setup
+ */
+async function detectClaritySetup(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('clarity_api_token, clarity_project_id, clarity_connected_at')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.clarity_api_token && client?.clarity_project_id) {
+    evidence.push(`Clarity connected: Project ${client.clarity_project_id}`)
+    if (client.clarity_connected_at) {
+      evidence.push(`Connected on ${new Date(client.clarity_connected_at).toLocaleDateString()}`)
+    }
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Microsoft Clarity not connected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect privacy policy page
+ */
+async function detectPrivacyPolicy(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check scan results for privacy policy
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_privacy_policy === true) {
+    evidence.push('Privacy policy page detected')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Privacy policy page not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect terms of service page
+ */
+async function detectTermsPage(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check scan results for terms page
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_terms_page === true) {
+    evidence.push('Terms of service page detected')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Terms of service page not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect URL structure audit
+ */
+async function detectURLStructure(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check if technical audit was done
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.url_structure_checked === true) {
+    evidence.push('URL structure audited')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['URL structure not audited'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect mobile responsiveness check
+ */
+async function detectMobileResponsive(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check scan results for mobile friendly
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.is_mobile_friendly !== undefined) {
+    const isMobileFriendly = scans[0].scan_results.is_mobile_friendly
+    evidence.push(isMobileFriendly ? 'Site is mobile friendly' : 'Site needs mobile optimization')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Mobile responsiveness not checked'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect page speed check
+ */
+async function detectPageSpeed(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check scan results for page speed
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.performance_score !== undefined) {
+    const score = scans[0].scan_results.performance_score
+    evidence.push(`Performance score: ${score}/100`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Page speed not checked'],
     auto_complete: false,
   }
 }
