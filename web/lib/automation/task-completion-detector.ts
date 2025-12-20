@@ -66,6 +66,25 @@ const DETECTION_CRITERIA: Record<string, (clientId: string, task: Task) => Promi
   'Content Calendar Creation': detectContentCalendar,
   'Backlink Tracker Setup': detectBacklinkTrackerSetup,
 
+  // On-Page SEO Checklist Items
+  'Robots.txt Optimization': detectRobotsTxt,
+  '404 Error Page Setup': detect404Page,
+  'Canonical Tags Implementation': detectCanonicalTags,
+  'Schema Markup Implementation': detectSchemaMarkup,
+  'Image Alt Text Audit': detectAltTextAudit,
+  'Breadcrumb Navigation Setup': detectBreadcrumbs,
+  'ADA Accessibility Compliance': detectAccessibility,
+
+  // Month 1 Content Optimization
+  '301 Redirects for Broken Links': detectBrokenLinks,
+  'Crawl Errors Audit': detectCrawlErrors,
+  'Lazy Loading Implementation': detectLazyLoading,
+
+  // Month 2+ Ongoing Optimization
+  'Pages Ranking 10-30 Optimization': detectRanking10to30,
+  'Exit Page Analysis': detectExitPages,
+  'Old Content Update': detectOldContentUpdate,
+
   // Generic patterns (match partial names)
   'Content Creation': detectContentCreation,
   'Content Strategy': detectContentStrategy,
@@ -1373,6 +1392,573 @@ async function detectPageSpeed(clientId: string, task: Task): Promise<DetectionR
     detected: false,
     confidence: 'low',
     evidence: ['Page speed not checked'],
+    auto_complete: false,
+  }
+}
+
+// ============================================
+// On-Page SEO Detection Functions
+// ============================================
+
+/**
+ * Detect robots.txt optimization
+ */
+async function detectRobotsTxt(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_robots_txt === true) {
+    evidence.push('Robots.txt detected and analyzed')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Robots.txt not detected or not analyzed'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect 404 error page setup
+ */
+async function detect404Page(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_custom_404 === true) {
+    evidence.push('Custom 404 error page detected')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Custom 404 page not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect canonical tags implementation
+ */
+async function detectCanonicalTags(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_canonical_tags === true) {
+    evidence.push('Canonical tags detected on pages')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Canonical tags not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect schema markup implementation
+ */
+async function detectSchemaMarkup(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_schema_markup === true) {
+    const schemaTypes = scans[0].scan_results.schema_types || []
+    evidence.push('Schema markup detected')
+    if (schemaTypes.length > 0) {
+      evidence.push(`Types: ${schemaTypes.slice(0, 5).join(', ')}`)
+    }
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Schema markup not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect image alt text audit
+ */
+async function detectAltTextAudit(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.images_audited !== undefined) {
+    const { images_total, images_with_alt, images_missing_alt } = scans[0].scan_results
+    evidence.push(`${images_total || 0} images audited`)
+    if (images_with_alt) evidence.push(`${images_with_alt} have alt text`)
+    if (images_missing_alt) evidence.push(`${images_missing_alt} missing alt text`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Image alt text audit not performed'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect breadcrumb navigation
+ */
+async function detectBreadcrumbs(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_breadcrumbs === true) {
+    evidence.push('Breadcrumb navigation detected')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Breadcrumb navigation not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect ADA accessibility compliance
+ */
+async function detectAccessibility(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.accessibility_score !== undefined) {
+    const score = scans[0].scan_results.accessibility_score
+    evidence.push(`Accessibility score: ${score}/100`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: score >= 80 ? 'high' : 'medium',
+      evidence,
+      auto_complete: score >= 80,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Accessibility not audited'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect broken links / 301 redirects
+ */
+async function detectBrokenLinks(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.broken_links_checked === true) {
+    const brokenCount = scans[0].scan_results.broken_links_count || 0
+    const fixedCount = scans[0].scan_results.broken_links_fixed || 0
+    evidence.push(`Broken links audit completed`)
+    evidence.push(`Found: ${brokenCount}, Fixed: ${fixedCount}`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: brokenCount === 0 || fixedCount > 0 ? 'high' : 'medium',
+      evidence,
+      auto_complete: brokenCount === 0 || fixedCount === brokenCount,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Broken links not audited'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect crawl errors audit
+ */
+async function detectCrawlErrors(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check GSC connection for crawl error data
+  const { data: client } = await supabase
+    .from('clients')
+    .select('google_oauth_tokens, selected_gsc_site_url')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.google_oauth_tokens && client?.selected_gsc_site_url) {
+    evidence.push('GSC connected - crawl errors available')
+
+    // Check for crawl error data in scans
+    const { data: scans } = await supabase
+      .from('seo_scans')
+      .select('scan_results')
+      .eq('client_id', clientId)
+      .eq('scan_status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (scans && scans.length > 0 && scans[0].scan_results?.crawl_errors_count !== undefined) {
+      evidence.push(`${scans[0].scan_results.crawl_errors_count} crawl errors found`)
+    }
+
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['GSC not connected - cannot audit crawl errors'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect lazy loading implementation
+ */
+async function detectLazyLoading(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_lazy_loading === true) {
+    evidence.push('Lazy loading detected on images/videos')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Lazy loading not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect pages ranking 10-30 optimization
+ */
+async function detectRanking10to30(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check GSC for pages in positions 10-30
+  const { data: client } = await supabase
+    .from('clients')
+    .select('google_oauth_tokens, selected_gsc_site_url')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.google_oauth_tokens && client?.selected_gsc_site_url) {
+    // Check if we have ranking data stored
+    const { data: rankings } = await supabase
+      .from('rank_tracking')
+      .select('keyword, position')
+      .eq('client_id', clientId)
+      .gte('position', 10)
+      .lte('position', 30)
+      .limit(10)
+
+    if (rankings && rankings.length > 0) {
+      evidence.push(`${rankings.length} keywords in positions 10-30 identified`)
+      evidence.push('Optimization opportunities identified')
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'medium',
+        evidence,
+        auto_complete: false, // Requires manual optimization
+      }
+    }
+
+    evidence.push('GSC connected - ranking data available')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['GSC not connected - cannot identify ranking opportunities'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect exit page analysis
+ */
+async function detectExitPages(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check GA4 connection for exit page data
+  const { data: client } = await supabase
+    .from('clients')
+    .select('google_oauth_tokens, selected_ga4_property_id')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.google_oauth_tokens && client?.selected_ga4_property_id) {
+    evidence.push('GA4 connected - exit page data available')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false, // Requires analysis
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['GA4 not connected - cannot analyze exit pages'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect old content updates
+ */
+async function detectOldContentUpdate(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+  const month = task.month
+
+  // Get client start date
+  const { data: client } = await supabase
+    .from('clients')
+    .select('created_at')
+    .eq('id', clientId)
+    .single()
+
+  if (!client) {
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: false,
+      confidence: 'low',
+      evidence: ['Cannot determine client start date'],
+      auto_complete: false,
+    }
+  }
+
+  const startDate = new Date(client.created_at)
+  const monthStart = new Date(startDate)
+  monthStart.setMonth(monthStart.getMonth() + month)
+  const monthEnd = new Date(monthStart)
+  monthEnd.setMonth(monthEnd.getMonth() + 1)
+
+  // Check for content updates in this period
+  const { data: updates } = await supabase
+    .from('content_published')
+    .select('id, title, updated_at')
+    .eq('client_id', clientId)
+    .eq('is_update', true)
+    .gte('updated_at', monthStart.toISOString())
+    .lt('updated_at', monthEnd.toISOString())
+
+  const updateCount = updates?.length || 0
+
+  if (updateCount >= 2) {
+    evidence.push(`${updateCount} content pieces updated this month`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  } else if (updateCount > 0) {
+    evidence.push(`${updateCount}/2 content updates this month`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: false,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['No content updates recorded for this period'],
     auto_complete: false,
   }
 }
