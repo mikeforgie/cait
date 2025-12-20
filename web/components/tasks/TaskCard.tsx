@@ -24,14 +24,24 @@ export interface Task {
   dueDate?: string
   tags?: string[]
   status: 'todo' | 'in_progress' | 'completed'
+  // Extended fields for detail view
+  month?: number
+  category?: string
+  automated?: boolean
+  instructions?: string[]
+  whyItMatters?: string
+  estimatedTime?: string
+  automationDescription?: string
+  resources?: { label: string; url: string }[]
 }
 
 interface TaskCardProps {
   task: Task
   isDragging?: boolean
+  onClick?: () => void
 }
 
-export function TaskCard({ task, isDragging = false }: TaskCardProps) {
+export function TaskCard({ task, isDragging = false, onClick }: TaskCardProps) {
   const priorityConfig = {
     low: { color: 'bg-blue-100 text-blue-800', dot: 'success' as const },
     medium: { color: 'bg-yellow-100 text-yellow-800', dot: 'warning' as const },
@@ -40,11 +50,18 @@ export function TaskCard({ task, isDragging = false }: TaskCardProps) {
 
   const config = priorityConfig[task.priority]
 
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't trigger click when dragging
+    if (isDragging) return
+    onClick?.()
+  }
+
   return (
     <Card
-      className={`cursor-grab active:cursor-grabbing hover:shadow-lg transition-all border-gray-200 ${
-        isDragging ? 'opacity-50 rotate-2 scale-105' : ''
+      className={`cursor-pointer hover:shadow-lg transition-all border-gray-200 ${
+        isDragging ? 'opacity-50 rotate-2 scale-105 cursor-grabbing' : ''
       }`}
+      onClick={handleClick}
     >
       <CardContent className="p-4">
         {/* Drag Handle */}

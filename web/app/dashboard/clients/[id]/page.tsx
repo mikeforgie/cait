@@ -33,24 +33,50 @@ export default async function ClientDetailPage({
     backlinks: 60
   }
 
+  // Fetch active tasks for this client
+  const { data: tasks } = await supabase
+    .from('tasks')
+    .select('id, name, status, category, month')
+    .eq('client_id', id)
+    .in('status', ['pending', 'in_progress'])
+    .order('month', { ascending: true })
+    .limit(5)
+
+  const taskStats = {
+    pending: tasks?.filter(t => t.status === 'pending').length || 0,
+    inProgress: tasks?.filter(t => t.status === 'in_progress').length || 0,
+  }
+
+  // Fetch total completed count
+  const { count: completedCount } = await supabase
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('client_id', id)
+    .eq('status', 'completed')
+
   // Connections with AI guide support - derive status from actual client data
-  const connections = [
+  const connections: Array<{
+    id: string
+    name: string
+    status: 'success' | 'warning' | 'danger'
+    guideId: string
+  }> = [
     {
       id: 'gsc',
       name: 'Google Search Console',
-      status: (client.selected_gsc_site_url ? 'success' : 'danger') as const,
+      status: client.selected_gsc_site_url ? 'success' : 'danger',
       guideId: 'connect-gsc'
     },
     {
       id: 'ga4',
       name: 'Google Analytics 4',
-      status: (client.selected_ga4_property_id ? 'success' : 'danger') as const,
+      status: client.selected_ga4_property_id ? 'success' : 'danger',
       guideId: 'connect-ga4'
     },
     {
       id: 'anthropic',
       name: 'Anthropic API',
-      status: 'danger' as const,
+      status: 'danger',
       guideId: 'add-anthropic-key'
     },
   ]
@@ -127,8 +153,59 @@ export default async function ClientDetailPage({
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">No active tasks</p>
+          <CardContent className="space-y-3">
+            {/* Task Stats Summary */}
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                <span className="text-gray-600">{taskStats.inProgress} in progress</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                <span className="text-gray-600">{taskStats.pending} pending</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                <span className="text-gray-600">{completedCount || 0} completed</span>
+              </div>
+            </div>
+
+            {/* Task List */}
+            {tasks && tasks.length > 0 ? (
+              <div className="space-y-2">
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        task.status === 'in_progress' ? 'bg-yellow-500' : 'bg-gray-400'
+                      }`}></span>
+                      <span className="text-sm font-medium text-gray-700">{task.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        Month {task.month}
+                      </Badge>
+                      <Badge
+                        className={`text-xs ${
+                          task.status === 'in_progress'
+                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {task.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No active tasks. All caught up! 🎉
+              </p>
+            )}
           </CardContent>
         </Card>
 

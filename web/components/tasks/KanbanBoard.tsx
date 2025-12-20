@@ -6,18 +6,22 @@
  * - HTML5 drag-and-drop functionality
  * - Visual feedback during dragging
  * - Task count per column
+ * - Click to view task details with AI assistance
  */
 
 'use client'
 
 import { useState } from 'react'
 import { TaskCard, Task } from './TaskCard'
+import { TaskDetailModal } from './TaskDetailModal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusDot } from '@/components/ui/status-dot'
 
 interface KanbanBoardProps {
   initialTasks: Task[]
   onTaskMove?: (taskId: string, newStatus: Task['status']) => void
+  onTaskComplete?: (taskId: string) => void
+  onRunAutomation?: (taskId: string) => Promise<void>
 }
 
 type ColumnStatus = Task['status']
@@ -28,10 +32,12 @@ const columns: { id: ColumnStatus; title: string; dot: 'danger' | 'warning' | 's
   { id: 'completed', title: 'Completed', dot: 'success' }
 ]
 
-export function KanbanBoard({ initialTasks, onTaskMove }: KanbanBoardProps) {
+export function KanbanBoard({ initialTasks, onTaskMove, onTaskComplete, onRunAutomation }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [draggedTask, setDraggedTask] = useState<string | null>(null)
   const [dragOverColumn, setDragOverColumn] = useState<ColumnStatus | null>(null)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const getTasksByStatus = (status: ColumnStatus) => {
     return tasks.filter(task => task.status === status)
@@ -70,6 +76,32 @@ export function KanbanBoard({ initialTasks, onTaskMove }: KanbanBoardProps) {
     setDragOverColumn(null)
   }
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedTask(null)
+  }
+
+  const handleMarkComplete = (taskId: string) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId ? { ...task, status: 'completed' as const } : task
+    )
+    setTasks(updatedTasks)
+    onTaskMove?.(taskId, 'completed')
+    onTaskComplete?.(taskId)
+    handleCloseModal()
+  }
+
+  const handleRunAutomation = async (taskId: string) => {
+    if (onRunAutomation) {
+      await onRunAutomation(taskId)
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {columns.map(column => {
@@ -105,6 +137,7 @@ export function KanbanBoard({ initialTasks, onTaskMove }: KanbanBoardProps) {
                     <TaskCard
                       task={task}
                       isDragging={draggedTask === task.id}
+                      onClick={() => handleTaskClick(task)}
                     />
                   </div>
                 ))}
@@ -121,6 +154,15 @@ export function KanbanBoard({ initialTasks, onTaskMove }: KanbanBoardProps) {
           </Card>
         )
       })}
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onMarkComplete={handleMarkComplete}
+        onRunAutomation={handleRunAutomation}
+      />
     </div>
   )
 }

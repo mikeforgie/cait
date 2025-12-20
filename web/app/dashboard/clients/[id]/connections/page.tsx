@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { PlatformCard } from '@/components/connections/PlatformCard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +10,8 @@ import { AIGuideModal } from '@/components/ai/ai-guide-modal'
 import { getGuide } from '@/lib/ai/guides/guide-library'
 import { WordPressConnectionModal } from '@/components/connections/WordPressConnectionModal'
 import { HostingConnectionModal } from '@/components/connections/HostingConnectionModal'
+import { BingConnectionModal } from '@/components/connections/BingConnectionModal'
+import { ClarityConnectionModal } from '@/components/connections/ClarityConnectionModal'
 import {
   Search,
   TrendingUp,
@@ -18,7 +21,8 @@ import {
   Plus,
   BarChart3,
   Globe,
-  Server
+  Server,
+  MapPin
 } from 'lucide-react'
 
 interface Platform {
@@ -28,18 +32,21 @@ interface Platform {
   status: 'connected' | 'pending' | 'disconnected'
   lastSync?: string
   guideId?: string  // Links to AI guide
-  oauthType?: 'google' | 'bing' | 'clarity'  // For OAuth-based connections
-  connectionType?: 'wordpress' | 'hosting'  // For site deployment connections
+  oauthType?: 'google' | 'clarity'  // For OAuth-based connections
+  connectionType?: 'wordpress' | 'hosting' | 'bing' | 'clarity'  // For site deployment connections
 }
 
 export default function ClientConnectionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const router = useRouter()
   const [integrations, setIntegrations] = useState<any>(null)
   const [client, setClient] = useState<any>(null)
   const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null)
   const [isGuideOpen, setIsGuideOpen] = useState(false)
   const [isWordPressModalOpen, setIsWordPressModalOpen] = useState(false)
   const [isHostingModalOpen, setIsHostingModalOpen] = useState(false)
+  const [isBingModalOpen, setIsBingModalOpen] = useState(false)
+  const [isClarityModalOpen, setIsClarityModalOpen] = useState(false)
   const [wordpressConnection, setWordpressConnection] = useState<any>(null)
   const [hostingConnection, setHostingConnection] = useState<any>(null)
   const supabase = createClient()
@@ -145,6 +152,46 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
     return result
   }
 
+  // Handle Bing connection
+  const handleBingConnect = async (data: {
+    apiKey: string;
+    siteUrl: string;
+  }) => {
+    const response = await fetch('/api/auth/bing/save-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: id,
+        ...data,
+      }),
+    })
+    const result = await response.json()
+    if (result.success) {
+      fetchConnections() // Refresh connections
+    }
+    return result
+  }
+
+  // Handle Clarity connection
+  const handleClarityConnect = async (data: {
+    apiToken: string;
+    projectId: string;
+  }) => {
+    const response = await fetch('/api/auth/clarity/save-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: id,
+        ...data,
+      }),
+    })
+    const result = await response.json()
+    if (result.success) {
+      fetchConnections() // Refresh connections
+    }
+    return result
+  }
+
   // Define platform configurations with AI guides
   const platforms: Platform[] = [
     {
@@ -163,6 +210,15 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
       status: client?.selected_ga4_property_id ? 'connected' : (client?.google_connected_at ? 'pending' : 'disconnected'),
       lastSync: client?.ga4_last_sync,
       guideId: 'connect-ga4',
+      oauthType: 'google'
+    },
+    {
+      name: 'Google Business Profile',
+      description: 'Manage reviews, posts, and local SEO for your business listing.',
+      icon: MapPin,
+      // Show 'pending' if Google is connected (even if no locations found yet - user can refresh)
+      status: client?.selected_gbp_location_id ? 'connected' : (client?.google_connected_at ? 'pending' : 'disconnected'),
+      lastSync: client?.gbp_last_sync,
       oauthType: 'google'
     },
     {
@@ -185,15 +241,17 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
       name: 'Bing Webmaster Tools',
       description: 'Optimize your site for Bing search and access valuable SEO insights.',
       icon: TrendingUp,
-      status: integrations?.bing_site_url ? 'connected' : 'disconnected',
-      lastSync: integrations?.bing_last_sync
+      status: (client?.bing_api_key && client?.bing_site_url) ? 'connected' : 'disconnected',
+      lastSync: client?.bing_last_sync,
+      connectionType: 'bing'
     },
     {
       name: 'Microsoft Clarity',
       description: 'Understand user behavior with heatmaps, session recordings, and insights.',
       icon: MousePointer,
-      status: integrations?.clarity_project_id ? 'connected' : 'disconnected',
-      lastSync: integrations?.clarity_last_sync
+      status: (client?.clarity_api_token && client?.clarity_project_id) ? 'connected' : 'disconnected',
+      lastSync: client?.clarity_connected_at,
+      connectionType: 'clarity'
     },
     {
       name: 'Anthropic API',
@@ -268,6 +326,10 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
                 setIsWordPressModalOpen(true)
               } else if (platform.connectionType === 'hosting') {
                 setIsHostingModalOpen(true)
+              } else if (platform.connectionType === 'bing') {
+                setIsBingModalOpen(true)
+              } else if (platform.connectionType === 'clarity') {
+                setIsClarityModalOpen(true)
               } else if (platform.guideId) {
                 // For non-OAuth platforms, show guide
                 handleOpenGuide(platform.guideId)
@@ -281,6 +343,13 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
                 setIsWordPressModalOpen(true)
               } else if (platform.connectionType === 'hosting') {
                 setIsHostingModalOpen(true)
+              } else if (platform.connectionType === 'bing') {
+                setIsBingModalOpen(true)
+              } else if (platform.connectionType === 'clarity') {
+                setIsClarityModalOpen(true)
+              } else if (platform.oauthType === 'google') {
+                // For Google services (GA4, GSC, GBP), navigate to select-properties page
+                router.push(`/dashboard/clients/${id}/connections/select-properties`)
               } else {
                 console.log(`Configure ${platform.name} for client ${id}`)
               }
@@ -358,6 +427,22 @@ export default function ClientConnectionsPage({ params }: { params: Promise<{ id
         isOpen={isHostingModalOpen}
         onClose={() => setIsHostingModalOpen(false)}
         onConnect={handleHostingConnect}
+        clientDomain={client?.domain}
+      />
+
+      {/* Bing Webmaster Tools Connection Modal */}
+      <BingConnectionModal
+        isOpen={isBingModalOpen}
+        onClose={() => setIsBingModalOpen(false)}
+        onConnect={handleBingConnect}
+        clientDomain={client?.domain}
+      />
+
+      {/* Microsoft Clarity Connection Modal */}
+      <ClarityConnectionModal
+        isOpen={isClarityModalOpen}
+        onClose={() => setIsClarityModalOpen(false)}
+        onConnect={handleClarityConnect}
         clientDomain={client?.domain}
       />
     </div>

@@ -2,12 +2,14 @@
  * Google OAuth Select Properties Route
  *
  * Saves the user's selected GA4 property, GSC site, and GBP location
+ * Then triggers auto-scan to detect and complete relevant tasks
  *
  * Usage: POST /api/auth/google/select-properties
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { runConnectionScan } from '@/lib/scanning/connection-scanner'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,9 +54,21 @@ export async function POST(request: NextRequest) {
     console.log('GSC Site:', selectedGSC || '(none)')
     console.log('GBP Location:', selectedGBP || '(none)')
 
+    // Trigger auto-scan to detect and complete relevant tasks
+    let scanResult = null
+    try {
+      console.log('🔍 Running connection scan to detect completed tasks...')
+      scanResult = await runConnectionScan(clientId, 'all')
+      console.log(`✅ Scan complete: ${scanResult.tasks_auto_completed} tasks auto-completed`)
+    } catch (scanError) {
+      console.error('Warning: Connection scan failed (non-critical):', scanError)
+      // Don't fail the whole request if scan fails
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Properties selected successfully',
+      scan_result: scanResult,
     })
   } catch (error: any) {
     console.error('Error saving property selection:', error)

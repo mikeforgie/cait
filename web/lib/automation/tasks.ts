@@ -25,14 +25,14 @@ export interface TaskTemplate {
 
 /**
  * Month 0-12 Task Templates
- * Based on CAIT plan PDF roadmap
+ * Based on CAIT plan PDF roadmap and original Notion export
  */
 export const TASK_TEMPLATES: TaskTemplate[] = [
-  // Month 0: Onboarding & Foundation
+  // Month 0: Onboarding & Foundation (Setup & Strategy)
   {
     month: 0,
     name: 'Client Interview & Onboarding',
-    description: 'Send interview questionnaire and collect business information',
+    description: 'Send interview questionnaire and collect business information, goals, target audience',
     category: 'analytics',
     automated: false, // Manual for now, AI later
   },
@@ -51,7 +51,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
   {
     month: 0,
     name: 'Competitor Analysis (3 competitors)',
-    description: 'Analyze top 3 competitors for keyword overlap and backlink strategies',
+    description: 'Analyze top 3 competitors for keyword overlap, backlink strategies, and content gaps',
     category: 'keyword_research',
     automated: true,
     automation_config: {
@@ -62,33 +62,29 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
   },
   {
     month: 0,
-    name: 'Technical SEO Audit',
-    description: 'Comprehensive technical audit covering crawlability, speed, mobile, schema',
-    category: 'technical_seo',
-    automated: true,
-    automation_config: {
-      api: 'dataforseo',
-      endpoint: 'technical_audit',
-    },
-  },
-  {
-    month: 0,
     name: 'Google Analytics 4 Setup',
-    description: 'Verify GA4 tracking and set up goal conversions',
+    description: 'Verify GA4 tracking, set up goal conversions, and configure reports',
     category: 'analytics',
     automated: false,
   },
   {
     month: 0,
     name: 'Google Search Console Setup',
-    description: 'Verify GSC access and submit sitemap',
+    description: 'Verify GSC access, submit sitemap, and configure performance tracking',
     category: 'analytics',
     automated: false,
   },
   {
     month: 0,
+    name: 'Google Business Profile Optimization',
+    description: 'Claim/verify GBP listing, optimize business info, add photos, set categories',
+    category: 'local_seo',
+    automated: false, // Partial automation via GBP API
+  },
+  {
+    month: 0,
     name: 'Backlink Profile Discovery',
-    description: 'Discover and catalog all existing backlinks',
+    description: 'Discover and catalog all existing backlinks with DR/DA metrics',
     category: 'backlinks',
     automated: true,
     automation_config: {
@@ -97,38 +93,78 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       parameters: { limit: 1000 },
     },
   },
+  {
+    month: 0,
+    name: 'Initial Strategy Document',
+    description: 'Generate comprehensive SEO strategy based on audit findings',
+    category: 'analytics',
+    automated: true,
+    automation_config: {
+      api: 'claude',
+      endpoint: 'generate_strategy',
+    },
+  },
 
-  // Month 1: Content & Optimization
+  // Month 1: Technical Foundation
   {
     month: 1,
-    name: 'Content Strategy (4 pieces)',
-    description: 'Plan 4 content pieces targeting high-priority keywords',
-    category: 'content',
-    automated: false, // AI-assisted later
+    name: 'Technical SEO Audit',
+    description: 'Comprehensive technical audit: crawlability, speed, mobile, schema, Core Web Vitals',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'dataforseo',
+      endpoint: 'technical_audit',
+    },
   },
   {
     month: 1,
     name: 'On-Page Optimization (Homepage + 3 pages)',
-    description: 'Optimize title tags, meta descriptions, headers, and content',
+    description: 'Optimize title tags, meta descriptions, headers, images, and internal links',
     category: 'technical_seo',
     automated: false,
   },
   {
     month: 1,
+    name: 'Content Calendar Creation',
+    description: 'Create 3-month content calendar based on keyword research and competitor gaps',
+    category: 'content',
+    automated: false, // AI-assisted later
+  },
+  {
+    month: 1,
+    name: 'Content Strategy (4 pieces)',
+    description: 'Plan 4 content pieces targeting high-priority keywords with outlines',
+    category: 'content',
+    automated: false, // AI-assisted later
+  },
+  {
+    month: 1,
     name: 'Local SEO Setup',
-    description: 'Optimize Google Business Profile and local citations',
+    description: 'Set up local citations, NAP consistency check, local schema markup',
     category: 'local_seo',
     automated: false,
   },
   {
     month: 1,
     name: 'Rank Tracking Setup',
-    description: 'Set up automated rank tracking for target keywords',
+    description: 'Set up automated rank tracking for target keywords (via GSC + DataForSEO)',
     category: 'analytics',
     automated: true,
     automation_config: {
       api: 'dataforseo',
       endpoint: 'ranked_keywords',
+    },
+  },
+  {
+    month: 1,
+    name: 'Backlink Tracker Setup',
+    description: 'Set up backlink monitoring with DR/DA tracking and link health alerts',
+    category: 'backlinks',
+    automated: true,
+    automation_config: {
+      api: 'dataforseo',
+      endpoint: 'backlinks_monitor',
     },
   },
 

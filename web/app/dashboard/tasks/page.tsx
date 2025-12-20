@@ -199,7 +199,7 @@ export default function TasksPage() {
                     ))}
                     {client.total_count > 5 && (
                       <Link
-                        href={`/dashboard/clients/${client.client_id}/todos`}
+                        href={`/dashboard/clients/${client.client_id}/tasks`}
                         className="block text-center text-sm text-blue-600 hover:text-blue-700 py-2"
                       >
                         View all {client.total_count} tasks →

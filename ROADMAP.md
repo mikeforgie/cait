@@ -1,6 +1,6 @@
 # CAIT Roadmap
 
-**Last Updated:** December 4, 2024
+**Last Updated:** December 11, 2024
 **Branch:** `dashboard-rebuild-fresh`
 
 ---
@@ -21,6 +21,13 @@
 - [x] Property/site selection flow
 - [x] GSC data fetching (clicks, impressions, CTR, position)
 - [x] GA4 data fetching (users, sessions, pageviews)
+- [x] Google Business Profile discovery with retry logic
+- [x] GBP refresh button with quota error handling
+- [x] **GBP API Access** - ✅ Approved December 11, 2024
+
+### Microsoft Integrations
+- [x] Bing Webmaster Tools OAuth connection
+- [x] Microsoft Clarity manual connection (Site ID)
 
 ### Task Management
 - [x] Tasks database schema
@@ -169,10 +176,14 @@
 
 ### Fully Working
 - `GET/POST /api/auth/google/*` - OAuth flow
+- `POST /api/auth/google/refresh-gbp` - Refresh GBP locations with retry
+- `POST /api/auth/google/select-properties` - Save selected properties
 - `GET /api/gsc/*` - Search Console data
 - `GET /api/ga4/*` - Analytics data
 - `GET/POST/DELETE /api/connections/wordpress` - WordPress connections
 - `GET/POST/DELETE /api/connections/hosting` - Hosting connections
+- `GET/POST/DELETE /api/connections/bing` - Bing Webmaster Tools
+- `GET/POST/DELETE /api/connections/clarity` - Microsoft Clarity
 
 ### Needs Testing
 - `POST /api/deploy` - File deployment

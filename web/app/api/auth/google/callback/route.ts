@@ -52,7 +52,13 @@ export async function GET(request: NextRequest) {
     const gscSites = await discoverGSCSites(tokens)
 
     console.log('Discovering GBP locations...')
-    const gbpLocations = await discoverGBPLocations(tokens)
+    const gbpResult = await discoverGBPLocations(tokens)
+    const gbpLocations = gbpResult.locations
+
+    // Log if quota was exceeded - user can retry later
+    if (gbpResult.quotaExceeded) {
+      console.log('⚠️ GBP quota exceeded during initial discovery - user can refresh later')
+    }
 
     // Store in database
     console.log('Saving to database...')
@@ -76,6 +82,9 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${ga4Properties.length} GA4 properties`)
     console.log(`Found ${gscSites.length} GSC sites`)
     console.log(`Found ${gbpLocations.length} GBP locations`)
+    if (gbpResult.quotaExceeded) {
+      console.log('⚠️ Note: GBP quota was exceeded. User can click Refresh to try again.')
+    }
 
     // Redirect to property selection page so user can choose which properties to track
     return NextResponse.redirect(

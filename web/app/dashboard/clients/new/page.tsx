@@ -26,18 +26,35 @@ export default function NewClientPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('clients').insert([
+      const { data, error } = await supabase.from('clients').insert([
         {
           name: formData.name,
           domain: formData.domain,
           focus_service: formData.focus_service || null,
           primary_location: formData.primary_location || null,
         },
-      ])
+      ]).select('id').single()
 
       if (error) {
         setError(error.message)
         return
+      }
+
+      // Initialize Month 0-12 tasks for the new client
+      if (data?.id) {
+        try {
+          const response = await fetch('/api/automation/initialize-tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientId: data.id }),
+          })
+          if (!response.ok) {
+            console.error('Failed to initialize tasks:', await response.text())
+          }
+        } catch (taskError) {
+          console.error('Error initializing tasks:', taskError)
+          // Don't fail client creation if task init fails
+        }
       }
 
       router.push('/dashboard')

@@ -80,12 +80,13 @@ export function PlatformCard({
               </div>
             </div>
           </div>
-          {status === 'connected' && onConfigure && (
+          {(status === 'connected' || status === 'pending') && onConfigure && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onConfigure}
               className="text-gray-500 hover:text-gray-700"
+              title={status === 'pending' ? 'Complete setup' : 'Configure'}
             >
               <Settings className="w-4 h-4" />
             </Button>

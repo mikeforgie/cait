@@ -1,9 +1,10 @@
-import { ExpandableTasksBoard } from '@/components/dashboard/ExpandableTasksBoard';
+import { redirect } from 'next/navigation'
 
-export default function TodosPage() {
-  return (
-    <div className="space-y-6">
-      <ExpandableTasksBoard />
-    </div>
-  );
+export default async function TodosPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  redirect(`/dashboard/clients/${id}/tasks`)
 }
