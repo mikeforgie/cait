@@ -95,6 +95,17 @@ const DETECTION_CRITERIA: Record<string, (clientId: string, task: Task) => Promi
   'Review Generation Campaign': detectReviewGeneration,
   'Directory Submissions': detectDirectorySubmissions,
 
+  // Gap Analysis Tasks
+  'Google Penalties Check': detectGooglePenalties,
+  'Index Coverage Report Review': detectIndexCoverage,
+  'Core Web Vitals Audit': detectCoreWebVitals,
+  'Conversion Tracking Setup': detectConversionTracking,
+  'Local Business Schema Implementation': detectLocalBusinessSchema,
+  'Google Map Embed on Contact Page': detectGoogleMapEmbed,
+  'XML Sitemap Audit': detectXMLSitemapAudit,
+  'JavaScript SEO Audit': detectJavaScriptSEO,
+  'Long-Tail Keyword Targeting': detectLongTailKeywords,
+
   // Generic patterns (match partial names)
   'Content Creation': detectContentCreation,
   'Content Strategy': detectContentStrategy,
@@ -2441,6 +2452,458 @@ async function detectDirectorySubmissions(clientId: string, task: Task): Promise
     detected: false,
     confidence: 'low',
     evidence: ['Directory submissions not tracked'],
+    auto_complete: false,
+  }
+}
+
+// ============================================
+// Gap Analysis Detection Functions
+// ============================================
+
+/**
+ * Detect Google penalties check
+ */
+async function detectGooglePenalties(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check if GSC is connected (needed for manual actions check)
+  const { data: client } = await supabase
+    .from('clients')
+    .select('google_oauth_tokens, selected_gsc_site_url')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.google_oauth_tokens && client?.selected_gsc_site_url) {
+    // Check automation config for penalty check
+    const { data: config } = await supabase
+      .from('automation_config')
+      .select('config')
+      .eq('client_id', clientId)
+      .eq('type', 'penalty_check')
+      .single()
+
+    if (config?.config?.checked_at) {
+      evidence.push('Google penalties checked via GSC')
+      evidence.push(config.config.has_penalties ? 'WARNING: Penalties found!' : 'No penalties detected')
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: !config.config.has_penalties,
+      }
+    }
+
+    evidence.push('GSC connected - penalty check available')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['GSC not connected - cannot check penalties'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect index coverage report review
+ */
+async function detectIndexCoverage(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('google_oauth_tokens, selected_gsc_site_url')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.google_oauth_tokens && client?.selected_gsc_site_url) {
+    const { data: config } = await supabase
+      .from('automation_config')
+      .select('config')
+      .eq('client_id', clientId)
+      .eq('type', 'index_coverage')
+      .single()
+
+    if (config?.config?.reviewed_at) {
+      evidence.push('Index coverage reviewed')
+      if (config.config.errors) evidence.push(`Errors: ${config.config.errors}`)
+      if (config.config.warnings) evidence.push(`Warnings: ${config.config.warnings}`)
+      if (config.config.valid) evidence.push(`Valid pages: ${config.config.valid}`)
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+
+    evidence.push('GSC connected - index coverage data available')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['GSC not connected - cannot review index coverage'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect Core Web Vitals audit
+ */
+async function detectCoreWebVitals(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0) {
+    const results = scans[0].scan_results
+    if (results?.lcp !== undefined || results?.fid !== undefined || results?.cls !== undefined) {
+      evidence.push('Core Web Vitals audited')
+      if (results.lcp) evidence.push(`LCP: ${results.lcp}s`)
+      if (results.fid) evidence.push(`FID: ${results.fid}ms`)
+      if (results.inp) evidence.push(`INP: ${results.inp}ms`)
+      if (results.cls) evidence.push(`CLS: ${results.cls}`)
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Core Web Vitals not audited'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect conversion tracking setup
+ */
+async function detectConversionTracking(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('google_oauth_tokens, selected_ga4_property_id')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.google_oauth_tokens && client?.selected_ga4_property_id) {
+    const { data: config } = await supabase
+      .from('automation_config')
+      .select('config')
+      .eq('client_id', clientId)
+      .eq('type', 'conversion_tracking')
+      .single()
+
+    if (config?.config?.conversions_configured) {
+      evidence.push('Conversion tracking configured in GA4')
+      if (config.config.conversion_count) {
+        evidence.push(`${config.config.conversion_count} conversion events set up`)
+      }
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+
+    evidence.push('GA4 connected - conversion tracking can be configured')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['GA4 not connected - cannot configure conversion tracking'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect local business schema implementation
+ */
+async function detectLocalBusinessSchema(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0) {
+    const schemaTypes = scans[0].scan_results?.schema_types || []
+    const hasLocalSchema = schemaTypes.some((t: string) =>
+      t.toLowerCase().includes('localbusiness') ||
+      t.toLowerCase().includes('organization') ||
+      t.toLowerCase().includes('store')
+    )
+
+    if (hasLocalSchema) {
+      evidence.push('Local Business schema detected')
+      evidence.push(`Types: ${schemaTypes.filter((t: string) =>
+        t.toLowerCase().includes('local') || t.toLowerCase().includes('business')
+      ).join(', ')}`)
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Local Business schema not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect Google Map embed on contact page
+ */
+async function detectGoogleMapEmbed(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.has_google_map === true) {
+    evidence.push('Google Map embed detected on site')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Google Map embed not detected'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect XML sitemap audit
+ */
+async function detectXMLSitemapAudit(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('google_oauth_tokens, selected_gsc_site_url')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.google_oauth_tokens && client?.selected_gsc_site_url) {
+    const { data: config } = await supabase
+      .from('automation_config')
+      .select('config')
+      .eq('client_id', clientId)
+      .eq('type', 'sitemap_audit')
+      .single()
+
+    if (config?.config?.audited_at) {
+      evidence.push('XML sitemap audited')
+      if (config.config.urls_submitted) evidence.push(`URLs submitted: ${config.config.urls_submitted}`)
+      if (config.config.urls_indexed) evidence.push(`URLs indexed: ${config.config.urls_indexed}`)
+      if (config.config.errors) evidence.push(`Errors: ${config.config.errors}`)
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+
+    evidence.push('GSC connected - sitemap status available')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['GSC not connected - cannot audit sitemap'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect JavaScript SEO audit
+ */
+async function detectJavaScriptSEO(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.js_rendering_checked === true) {
+    evidence.push('JavaScript rendering audited')
+    if (scans[0].scan_results.js_issues) {
+      evidence.push(`Issues found: ${scans[0].scan_results.js_issues}`)
+    } else {
+      evidence.push('No JavaScript SEO issues detected')
+    }
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['JavaScript SEO not audited'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect long-tail keyword targeting
+ */
+async function detectLongTailKeywords(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for long-tail keywords in keyword research (4+ words)
+  const { data: keywords } = await supabase
+    .from('keyword_research')
+    .select('keyword')
+    .eq('client_id', clientId)
+
+  if (keywords && keywords.length > 0) {
+    const longTail = keywords.filter(k => k.keyword.split(' ').length >= 4)
+    if (longTail.length >= 20) {
+      evidence.push(`${longTail.length} long-tail keywords identified`)
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    } else if (longTail.length > 0) {
+      evidence.push(`${longTail.length} long-tail keywords (target: 20+)`)
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'medium',
+        evidence,
+        auto_complete: false,
+      }
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Long-tail keywords not identified'],
     auto_complete: false,
   }
 }

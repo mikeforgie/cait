@@ -98,6 +98,53 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
   },
   {
     month: 0,
+    name: 'Google Penalties Check',
+    description: 'Check GSC for manual actions and algorithmic penalties affecting rankings',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'gsc',
+      endpoint: 'manual_actions',
+    },
+  },
+  {
+    month: 0,
+    name: 'Index Coverage Report Review',
+    description: 'Review GSC Index Coverage report for errors, warnings, and excluded pages',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'gsc',
+      endpoint: 'index_coverage',
+    },
+  },
+  {
+    month: 0,
+    name: 'Core Web Vitals Audit',
+    description: 'Audit LCP, FID/INP, and CLS scores for mobile and desktop via GSC/PageSpeed',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'dataforseo',
+      endpoint: 'core_web_vitals',
+    },
+  },
+  {
+    month: 0,
+    name: 'Conversion Tracking Setup',
+    description: 'Set up conversion tracking in GA4 for leads, sales, and key actions',
+    category: 'analytics',
+    automated: false,
+  },
+  {
+    month: 0,
+    name: 'GA4 Goal/Event Tracking',
+    description: 'Configure custom events and goals in GA4 for user behavior tracking',
+    category: 'analytics',
+    automated: false,
+  },
+  {
+    month: 0,
     name: 'Submit Sitemap to Google Search Console',
     description: 'Create XML sitemap and submit to GSC for indexing',
     category: 'technical_seo',
@@ -144,6 +191,28 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     automation_config: {
       api: 'brightlocal',
       endpoint: 'nap_audit',
+    },
+  },
+  {
+    month: 0,
+    name: 'Local Business Schema Implementation',
+    description: 'Add LocalBusiness schema markup with address, hours, geo coordinates, and service areas',
+    category: 'local_seo',
+    automated: true,
+    automation_config: {
+      api: 'scanner',
+      endpoint: 'local_schema_check',
+    },
+  },
+  {
+    month: 0,
+    name: 'Google Map Embed on Contact Page',
+    description: 'Embed Google Map on contact page with correct business location pin',
+    category: 'local_seo',
+    automated: true,
+    automation_config: {
+      api: 'scanner',
+      endpoint: 'google_map_check',
     },
   },
   {
@@ -579,6 +648,81 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       endpoint: 'backlinks_monitor',
     },
   },
+  {
+    month: 1,
+    name: 'Site Architecture Optimization',
+    description: 'Optimize site structure for crawlability, flat hierarchy, and logical URL paths',
+    category: 'technical_seo',
+    automated: false,
+  },
+  {
+    month: 1,
+    name: 'XML Sitemap Audit',
+    description: 'Audit sitemap for errors, warnings, and ensure all important pages are included',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'gsc',
+      endpoint: 'sitemap_status',
+    },
+  },
+  {
+    month: 1,
+    name: 'Hreflang Tags Implementation',
+    description: 'Implement hreflang tags for multi-language/region sites (if applicable)',
+    category: 'technical_seo',
+    automated: false,
+  },
+  {
+    month: 1,
+    name: 'JavaScript SEO Audit',
+    description: 'Audit JavaScript rendering, ensure content is crawlable, check for JS-related issues',
+    category: 'technical_seo',
+    automated: true,
+    automation_config: {
+      api: 'dataforseo',
+      endpoint: 'js_rendering',
+    },
+  },
+  {
+    month: 1,
+    name: 'Google Sitelinks Optimization',
+    description: 'Optimize site structure and navigation to earn Google Sitelinks in SERPs',
+    category: 'content',
+    automated: false,
+  },
+  {
+    month: 1,
+    name: 'Category/Archive Pages Optimization',
+    description: 'Optimize category, tag, and archive pages with unique content and proper SEO',
+    category: 'content',
+    automated: false,
+  },
+  {
+    month: 1,
+    name: 'Long-Tail Keyword Targeting',
+    description: 'Identify and create content targeting long-tail keyword opportunities',
+    category: 'keyword_research',
+    automated: true,
+    automation_config: {
+      api: 'dataforseo',
+      endpoint: 'long_tail_keywords',
+    },
+  },
+  {
+    month: 1,
+    name: 'Content Readability Optimization',
+    description: 'Optimize content formatting, reading level, and scannability for users',
+    category: 'content',
+    automated: false,
+  },
+  {
+    month: 1,
+    name: 'GSC Performance Alerts Setup',
+    description: 'Set up alerts for significant changes in GSC impressions, clicks, and rankings',
+    category: 'analytics',
+    automated: false,
+  },
 
   // Month 2: Content Creation
   {
@@ -734,6 +878,34 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       api: 'dataforseo',
       endpoint: 'competitor_backlinks',
     },
+  },
+  {
+    month: 2,
+    name: 'Broken Link Building',
+    description: 'Find broken links on authority sites and offer your content as replacement',
+    category: 'backlinks',
+    automated: false,
+  },
+  {
+    month: 2,
+    name: 'Resource Page Link Building',
+    description: 'Identify resource pages in your niche and pitch your content for inclusion',
+    category: 'backlinks',
+    automated: false,
+  },
+  {
+    month: 2,
+    name: 'Local Press/News Outreach',
+    description: 'Pitch stories to local news outlets and press for coverage and backlinks',
+    category: 'backlinks',
+    automated: false,
+  },
+  {
+    month: 2,
+    name: 'Podcast Guest Appearances',
+    description: 'Identify relevant podcasts and pitch yourself as a guest for backlinks and exposure',
+    category: 'backlinks',
+    automated: false,
   },
 
   // Months 3-12: Ongoing Optimization
