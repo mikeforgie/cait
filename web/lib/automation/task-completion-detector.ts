@@ -85,6 +85,16 @@ const DETECTION_CRITERIA: Record<string, (clientId: string, task: Task) => Promi
   'Exit Page Analysis': detectExitPages,
   'Old Content Update': detectOldContentUpdate,
 
+  // Off-Page SEO Tasks
+  'NAP Consistency Audit': detectNAPConsistency,
+  'Toxic Backlink Audit': detectToxicBacklinks,
+  'Brand Mention Monitoring': detectBrandMentions,
+  'Competitor Backlink Analysis': detectCompetitorBacklinks,
+  'Link Audit': detectLinkAudit,
+  'Local Citations Building': detectLocalCitations,
+  'Review Generation Campaign': detectReviewGeneration,
+  'Directory Submissions': detectDirectorySubmissions,
+
   // Generic patterns (match partial names)
   'Content Creation': detectContentCreation,
   'Content Strategy': detectContentStrategy,
@@ -1959,6 +1969,478 @@ async function detectOldContentUpdate(clientId: string, task: Task): Promise<Det
     detected: false,
     confidence: 'low',
     evidence: ['No content updates recorded for this period'],
+    auto_complete: false,
+  }
+}
+
+// ============================================
+// Off-Page SEO Detection Functions
+// ============================================
+
+/**
+ * Detect NAP consistency audit
+ */
+async function detectNAPConsistency(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for NAP audit data from BrightLocal or scan results
+  const { data: scans } = await supabase
+    .from('seo_scans')
+    .select('scan_results')
+    .eq('client_id', clientId)
+    .eq('scan_status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (scans && scans.length > 0 && scans[0].scan_results?.nap_audit_completed === true) {
+    const consistency = scans[0].scan_results.nap_consistency_score || 0
+    evidence.push(`NAP consistency audit completed`)
+    evidence.push(`Consistency score: ${consistency}%`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  // Check BrightLocal locations for NAP data
+  const { data: locations } = await supabase
+    .from('brightlocal_locations')
+    .select('id, business_name')
+    .eq('client_id', clientId)
+
+  if (locations && locations.length > 0) {
+    evidence.push('BrightLocal configured - NAP monitoring available')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['NAP consistency audit not performed'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect toxic backlink audit
+ */
+async function detectToxicBacklinks(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for toxic backlink audit in automation config
+  const { data: config } = await supabase
+    .from('automation_config')
+    .select('config')
+    .eq('client_id', clientId)
+    .eq('type', 'toxic_backlink_audit')
+    .single()
+
+  if (config?.config?.last_audit_date) {
+    const toxicCount = config.config.toxic_count || 0
+    const disavowedCount = config.config.disavowed_count || 0
+    evidence.push(`Toxic backlink audit completed`)
+    evidence.push(`Found: ${toxicCount} toxic links`)
+    if (disavowedCount > 0) {
+      evidence.push(`Disavowed: ${disavowedCount} links`)
+    }
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  // Check if we have backlink data with spam scores
+  const { data: backlinks } = await supabase
+    .from('backlinks')
+    .select('id, spam_score')
+    .eq('client_id', clientId)
+    .not('spam_score', 'is', null)
+    .limit(10)
+
+  if (backlinks && backlinks.length > 0) {
+    evidence.push('Backlinks with spam scores available')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Toxic backlink audit not performed'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect brand mention monitoring
+ */
+async function detectBrandMentions(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for brand alert setup
+  const { data: client } = await supabase
+    .from('clients')
+    .select('name, domain')
+    .eq('id', clientId)
+    .single()
+
+  // Check automation config for brand monitoring
+  const { data: config } = await supabase
+    .from('automation_config')
+    .select('config')
+    .eq('client_id', clientId)
+    .eq('type', 'brand_monitoring')
+    .single()
+
+  if (config?.config?.enabled) {
+    const mentionsFound = config.config.total_mentions || 0
+    const unlinkedCount = config.config.unlinked_mentions || 0
+    evidence.push('Brand mention monitoring enabled')
+    evidence.push(`Total mentions tracked: ${mentionsFound}`)
+    if (unlinkedCount > 0) {
+      evidence.push(`Unlinked mentions (link opportunities): ${unlinkedCount}`)
+    }
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Brand mention monitoring not configured'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect competitor backlink analysis
+ */
+async function detectCompetitorBacklinks(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for competitor backlink data
+  const { data: competitors } = await supabase
+    .from('competitors')
+    .select('id, domain, backlink_count')
+    .eq('client_id', clientId)
+
+  if (competitors && competitors.length > 0) {
+    const withBacklinks = competitors.filter(c => c.backlink_count && c.backlink_count > 0)
+    if (withBacklinks.length > 0) {
+      evidence.push(`${withBacklinks.length} competitors with backlink data analyzed`)
+      withBacklinks.slice(0, 3).forEach(c => {
+        evidence.push(`- ${c.domain}: ${c.backlink_count} backlinks`)
+      })
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Competitor backlink analysis not performed'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect link audit completion
+ */
+async function detectLinkAudit(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+  const month = task.month
+
+  // Get client start date for monthly check
+  const { data: client } = await supabase
+    .from('clients')
+    .select('created_at')
+    .eq('id', clientId)
+    .single()
+
+  if (!client) {
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: false,
+      confidence: 'low',
+      evidence: ['Cannot determine client start date'],
+      auto_complete: false,
+    }
+  }
+
+  const startDate = new Date(client.created_at)
+  const monthStart = new Date(startDate)
+  monthStart.setMonth(monthStart.getMonth() + month)
+  const monthEnd = new Date(monthStart)
+  monthEnd.setMonth(monthEnd.getMonth() + 1)
+
+  // Check for backlink audit in this period
+  const { data: config } = await supabase
+    .from('automation_config')
+    .select('config, updated_at')
+    .eq('client_id', clientId)
+    .eq('type', 'backlink_audit')
+    .gte('updated_at', monthStart.toISOString())
+    .lt('updated_at', monthEnd.toISOString())
+    .single()
+
+  if (config) {
+    evidence.push('Link audit completed for this period')
+    if (config.config?.new_links) evidence.push(`New links: ${config.config.new_links}`)
+    if (config.config?.lost_links) evidence.push(`Lost links: ${config.config.lost_links}`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  // Check if backlinks exist (basic check)
+  const { count } = await supabase
+    .from('backlinks')
+    .select('id', { count: 'exact' })
+    .eq('client_id', clientId)
+
+  if (count && count > 0) {
+    evidence.push(`${count} backlinks in database`)
+    evidence.push('Backlink data available for audit')
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Link audit not performed for this period'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect local citations building
+ */
+async function detectLocalCitations(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for citation data in BrightLocal or custom table
+  const { data: citations } = await supabase
+    .from('backlinks')
+    .select('id, source_url')
+    .eq('client_id', clientId)
+    .eq('link_type', 'citation')
+
+  if (citations && citations.length >= 5) {
+    evidence.push(`${citations.length} local citations built`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  // Check BrightLocal for citation tracking
+  const { data: locations } = await supabase
+    .from('brightlocal_locations')
+    .select('id, citations_count')
+    .eq('client_id', clientId)
+    .single()
+
+  if (locations?.citations_count && locations.citations_count > 0) {
+    evidence.push(`${locations.citations_count} citations tracked in BrightLocal`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Local citations not built or tracked'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect review generation campaign
+ */
+async function detectReviewGeneration(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for review data from GBP or BrightLocal
+  const { data: client } = await supabase
+    .from('clients')
+    .select('gbp_locations, selected_gbp_location_id')
+    .eq('id', clientId)
+    .single()
+
+  if (client?.selected_gbp_location_id) {
+    evidence.push('GBP connected for review management')
+
+    // Check automation config for review campaign
+    const { data: config } = await supabase
+      .from('automation_config')
+      .select('config')
+      .eq('client_id', clientId)
+      .eq('type', 'review_campaign')
+      .single()
+
+    if (config?.config?.enabled) {
+      evidence.push('Review generation campaign active')
+      if (config.config.total_reviews) {
+        evidence.push(`Total reviews: ${config.config.total_reviews}`)
+      }
+      return {
+        task_id: task.id,
+        task_name: task.name,
+        detected: true,
+        confidence: 'high',
+        evidence,
+        auto_complete: true,
+      }
+    }
+
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'medium',
+      evidence,
+      auto_complete: false,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Review generation campaign not set up'],
+    auto_complete: false,
+  }
+}
+
+/**
+ * Detect directory submissions
+ */
+async function detectDirectorySubmissions(clientId: string, task: Task): Promise<DetectionResult> {
+  const supabase = await createClient()
+  const evidence: string[] = []
+
+  // Check for directory backlinks
+  const { data: directories } = await supabase
+    .from('backlinks')
+    .select('id, source_url')
+    .eq('client_id', clientId)
+    .eq('link_type', 'directory')
+
+  if (directories && directories.length >= 5) {
+    evidence.push(`${directories.length} directory submissions completed`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  // Check automation config for directory submission tracking
+  const { data: config } = await supabase
+    .from('automation_config')
+    .select('config')
+    .eq('client_id', clientId)
+    .eq('type', 'directory_submissions')
+    .single()
+
+  if (config?.config?.submitted_count && config.config.submitted_count >= 5) {
+    evidence.push(`${config.config.submitted_count} directories submitted`)
+    return {
+      task_id: task.id,
+      task_name: task.name,
+      detected: true,
+      confidence: 'high',
+      evidence,
+      auto_complete: true,
+    }
+  }
+
+  return {
+    task_id: task.id,
+    task_name: task.name,
+    detected: false,
+    confidence: 'low',
+    evidence: ['Directory submissions not tracked'],
     auto_complete: false,
   }
 }
